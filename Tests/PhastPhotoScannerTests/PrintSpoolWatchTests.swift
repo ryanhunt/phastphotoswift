@@ -204,6 +204,24 @@ func page(_ index: Int, _ side: ScannedPage.Side, seed: UInt8 = 0) -> ScannedPag
         #expect(await scanner.commands.suffix(2) == ["CAN ", "FIN "])
     }
 
+    struct CallbackFailure: Error {}
+
+    @Test func anErrorFromTheCallbackEndsTheWatchInsteadOfBeingRetried() async throws {
+        let scanner = SimulatedScanner()
+        await scanner.configure { $0.statusBody = Data("#ERRADF PE  ".utf8) }
+        let calls = EventLog<Int>()
+        let watch = ScannerWatch(settings: ScanSettings(), pollInterval: .milliseconds(2)) { SimulatedTransport(scanner: scanner) }
+        await #expect(throws: CallbackFailure.self) {
+            try await watch.run { _ in
+                calls.append(1)
+                throw CallbackFailure()
+            }
+        }
+        #expect(calls.all.count == 1)
+        #expect(await scanner.commands.suffix(1) == ["FIN "])
+        #expect(await scanner.closed)
+    }
+
     @Test func friendlyTextForJam() async throws {
         let scanner = SimulatedScanner()
         await scanner.configure { $0.statusBody = Data("#ERRADF PJ  ".utf8) }

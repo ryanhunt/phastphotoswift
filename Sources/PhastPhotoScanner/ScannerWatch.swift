@@ -48,17 +48,10 @@ public struct ScannerWatch: Sendable {
             while true {
                 try Task.checkCancellation()
                 let session = ScannerSession(transport: makeTransport())
-                var ready = false
+                var status: ScannerStatus?
                 do {
                     try await session.open()
-                    let status = try await session.status()
-                    if status.isReady {
-                        ready = true
-                        lastNotice = nil
-                    } else if lastNotice != status.friendlyMessage {
-                        lastNotice = status.friendlyMessage
-                        try await onEvent(.waiting(status.friendlyMessage))
-                    }
+                    status = try await session.status()
                 } catch is CancellationError {
                     await session.close()
                     throw CancellationError()
@@ -71,6 +64,22 @@ public struct ScannerWatch: Sendable {
                     }
                     try await Task.sleep(for: pollInterval)
                     continue
+                }
+
+                // Reported outside the `do` above: an error thrown by `onEvent` is the caller's, not an
+                // unreachable scanner, and must end the watch rather than be retried.
+                var ready = false
+                if let status {
+                    if status.isReady {
+                        ready = true
+                        lastNotice = nil
+                    } else if lastNotice != status.friendlyMessage {
+                        lastNotice = status.friendlyMessage
+                        do { try await onEvent(.waiting(status.friendlyMessage)) } catch {
+                            await session.close()
+                            throw error
+                        }
+                    }
                 }
 
                 if ready {
