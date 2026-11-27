@@ -194,7 +194,11 @@ extension RGBImage {
     /// Pillow's RGB to L: `(19595 R + 38470 G + 7471 B + 0x8000) >> 16`.
     @inline(__always)
     static func luma(_ r: UInt8, _ g: UInt8, _ b: UInt8) -> UInt8 {
-        UInt8((Int(r) * 19595 + Int(g) * 38470 + Int(b) * 7471 + 0x8000) >> 16)
+        // split up: Swift 6.3 gives up type-checking the one-line sum
+        let red: Int = Int(r) * 19595
+        let green: Int = Int(g) * 38470
+        let blue: Int = Int(b) * 7471
+        return UInt8((red + green + blue + 0x8000) >> 16)
     }
 
     /// Lookup table of Pillow's `ImageOps.autocontrast` for one 256-bin histogram: `cutoffPercent` of the
@@ -314,9 +318,11 @@ extension RGBImage {
                     for x in 1 ..< w - 1 {
                         for c in 0 ..< 3 {
                             let o = (y * w + x) * 3 + c, up = o - w * 3, down = o + w * 3
-                            let sum = Int(s[up - 3]) + Int(s[up]) + Int(s[up + 3])
-                                + Int(s[o - 3]) + 5 * Int(s[o]) + Int(s[o + 3])
-                                + Int(s[down - 3]) + Int(s[down]) + Int(s[down + 3])
+                            // three typed rows: one nine-term sum is slow to type-check
+                            let top: Int = Int(s[up - 3]) + Int(s[up]) + Int(s[up + 3])
+                            let middle: Int = Int(s[o - 3]) + 5 * Int(s[o]) + Int(s[o + 3])
+                            let bottom: Int = Int(s[down - 3]) + Int(s[down]) + Int(s[down + 3])
+                            let sum = top + middle + bottom
                             d[o] = UInt8(max(0, min(255, Int(Float(sum) / 13 + 0.5))))
                         }
                     }
