@@ -1,7 +1,8 @@
 import Foundation
 
-/// Carries ESC/I-2 bytes to and from the scanner: Wi-Fi ("IS" packets, ``NetworkTransport``) or USB
-/// (raw bulk transfers; not implemented yet, see docs/ROADMAP.md).
+/// Carries ESC/I-2 bytes to and from the scanner: Wi-Fi ("IS" packets, ``NetworkTransport``) or USB on macOS
+/// (raw bulk transfers, ``USBTransport``; not yet run against a scanner). ``ScannerConnection`` picks one.
+/// ``ScannerSession`` serialises exchanges, so a transport needs no locking of its own.
 public protocol ScannerTransport: Sendable {
     /// Connect and claim the scanner (Wi-Fi: read the hello and lock). Does not enter ESC/I-2 mode;
     /// ``ScannerSession`` does that.

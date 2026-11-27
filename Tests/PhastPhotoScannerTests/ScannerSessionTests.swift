@@ -61,7 +61,7 @@ struct TestFailure: Error {}
         #expect(pages[1].jpeg.suffix(100) == b.suffix(100))
         #expect(pages[0].stats.blocks == 2 && pages[0].stats.bytes == a.count)
 
-        #expect(await scanner.commands == ["STAT", "PARA", "TRDT"] + Array(repeating: "IMG ", count: 6) + ["FIN "])
+        #expect(await scanner.commands == ["INFO", "STAT", "PARA", "TRDT"] + Array(repeating: "IMG ", count: 6) + ["FIN "])
         #expect(await scanner.parameterBlocks == [ScanSettings().parameterBlock()])
     }
 
@@ -119,7 +119,7 @@ struct TestFailure: Error {}
             guard case ScannerError.notReady(let status) = error else { return false }
             return status.isFeederEmpty
         }
-        #expect(await scanner.commands == ["STAT", "FIN "])
+        #expect(await scanner.commands == ["INFO", "STAT", "FIN "])
     }
 
     @Test func scanErrorCancels() async throws {

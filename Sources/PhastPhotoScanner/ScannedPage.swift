@@ -1,14 +1,10 @@
 import Foundation
+import PhastPhotoProtocol
 
 /// One side of one print, as it came off the scanner.
 public struct ScannedPage: Hashable, Sendable {
-    public enum Side: String, Hashable, Sendable, CaseIterable {
-        /// Side A, sent first: the side facing down. With prints loaded face up (the usual way) it is the back
-        /// of the print; a single-sided scan reads only this side, so load prints face down for pictures only.
-        case a = "A"
-        /// Side B, the side facing up: the picture when prints are loaded face up. Duplex scans only.
-        case b = "B"
-    }
+    /// A or B; see ``ScanSide``.
+    public typealias Side = ScanSide
 
     /// Transfer timings for one side.
     public struct TransferStats: Hashable, Sendable {
@@ -22,6 +18,15 @@ public struct ScannedPage: Hashable, Sendable {
         public var transferring: Duration = .zero
 
         public init() {}
+
+        /// One line for logs: blocks, largest block, wait and transfer seconds, speed.
+        public var summaryLine: String {
+            func seconds(_ d: Duration) -> Double { Double(d.components.seconds) + Double(d.components.attoseconds) / 1e18 }
+            var line = "\(blocks) blocks, largest \(largestBlock / 1024) KiB, wait \(String(format: "%.1f", seconds(waiting))) s, "
+                + "transfer \(String(format: "%.1f", seconds(transferring))) s"
+            if let speed = bytesPerSecond { line += String(format: ", %.1f MB/s", speed / 1e6) }
+            return line
+        }
 
         /// Throughput while data was moving, in bytes per second.
         public var bytesPerSecond: Double? {
@@ -50,10 +55,26 @@ public struct ScannedPage: Hashable, Sendable {
     }
 }
 
+extension ScannedPage {
+    /// The same page under another side label (fast mode relabels A as B: ``SideMode/relabelled(_:)``).
+    public func relabelled(as side: Side) -> ScannedPage {
+        ScannedPage(index: index, side: side, width: width, height: height, jpeg: jpeg, stats: stats)
+    }
+}
+
 /// What a finished scan reports.
 public struct ScanSummary: Hashable, Sendable {
     /// Pages (sides) delivered.
     public var pageCount: Int
     /// Whether the scanner accepted `#BSZ`; if not, the scan ran with 64 KB blocks.
     public var blockSizeAccepted: Bool
+    /// The scan ended early because ``ScannerSession/stopAfterCurrentPrint()`` was called; the print that was
+    /// feeding finished first.
+    public var stoppedEarly = false
+
+    public init(pageCount: Int, blockSizeAccepted: Bool, stoppedEarly: Bool = false) {
+        self.pageCount = pageCount
+        self.blockSizeAccepted = blockSizeAccepted
+        self.stoppedEarly = stoppedEarly
+    }
 }

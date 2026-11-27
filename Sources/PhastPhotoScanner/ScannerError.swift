@@ -20,6 +20,11 @@ public enum ScannerError: Error, Sendable, LocalizedError {
     case noData(Duration)
     /// A body read returned no bytes before the body was complete.
     case emptyReply
+    /// A scan is running (or another exchange holds the wire): the session handles one exchange at a time,
+    /// and a scan owns it until it ends.
+    case sessionBusy
+    /// The device answered `INFO` with another model (or none): this package drives the FF-680W only.
+    case unsupportedModel(String?)
 
     public var errorDescription: String? {
         switch self {
@@ -37,6 +42,9 @@ public enum ScannerError: Error, Sendable, LocalizedError {
         case .scanFailed(let fields): "Scan error: \(fields)."
         case .noData(let duration): "No data from the scanner for \(duration)."
         case .emptyReply: "The scanner sent an empty reply."
+        case .sessionBusy: "A scan is running on this session; wait for it to finish (or stop it) first."
+        case .unsupportedModel(let model):
+            "This is \(model.map { "a \($0)" } ?? "an unknown scanner"), not an FF-680W: only the Epson FastFoto FF-680W is supported."
         }
     }
 }
