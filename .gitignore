@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# Swift Package Manager / Xcode
+.build/
+.swiftpm/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+
+# Never commit photos or scanner output (scans of real prints are personal)
+*.jpg
+*.jpeg
+*.JPG
+*.heic
+scans/
+
+# Private notes
+NOTES.local.md
+.env
