@@ -42,8 +42,19 @@ public enum Duplicates {
         /// (Pillow's extra `reducing_gap` box-reduction step is not reproduced.)
         func thumbnail(_ n: Int) -> Plane {
             guard max(width, height) > n else { return self }
-            let scale = Double(n) / Double(max(width, height))
-            let w = max(1, Int((Double(width) * scale).rounded())), h = max(1, Int((Double(height) * scale).rounded()))
+            // Pillow `Image.thumbnail`: the shorter side is `floor` or `ceil` of the exact value, whichever keeps the
+            // aspect ratio closest (ties: floor); never below 1.
+            let aspect = Double(width) / Double(height)
+            func roundAspect(_ value: Double, error: (Int) -> Double) -> Int {
+                let lo = Int(value.rounded(.down)), hi = Int(value.rounded(.up))
+                return max(error(hi) < error(lo) ? hi : lo, 1)
+            }
+            var w = n, h = n
+            if 1.0 >= aspect {  // x / y >= aspect with x = y = n
+                w = roundAspect(Double(n) * aspect) { abs(aspect - Double($0) / Double(n)) }
+            } else {
+                h = roundAspect(Double(n) / aspect) { $0 == 0 ? 0 : abs(aspect - Double(n) / Double($0)) }
+            }
             return Plane(width: w, height: h,
                          pixels: PillowResample.resize(pixels, width: width, height: height, to: w, h, filter: .bicubic))
         }
@@ -102,7 +113,8 @@ public enum Duplicates {
 
     /// Smallest Hamming distance between photo `a` (as stored, its first hash) and any rotation of photo `b`.
     public static func distance(_ a: [UInt64], _ b: [UInt64]) -> Int {
-        b.map { (a[0] ^ $0).nonzeroBitCount }.min() ?? 64
+        guard let first = a.first else { return 64 }
+        return b.map { (first ^ $0).nonzeroBitCount }.min() ?? 64
     }
 }
 
@@ -157,7 +169,9 @@ public final class DuplicateIndex: @unchecked Sendable {
         defer { lock.unlock() }
         data = data.filter { FileManager.default.fileExists(atPath: $0.key) }
         try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try JSONEncoder().encode(data).write(to: file, options: .atomic)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .withoutEscapingSlashes
+        try encoder.encode(data).write(to: file, options: .atomic)
     }
 
     /// The first of `candidates` that shows the same print as `url`, or `nil`.

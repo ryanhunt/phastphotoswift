@@ -58,6 +58,33 @@ func rotatedCCW(_ im: RGBImage) -> RGBImage {
         #expect(Duplicates.distance(Duplicates.hashes(im), Duplicates.hashes(turned)) == 0)
     }
 
+    @Test func hashOrderIsZeroThenCounterClockwiseTurns() {
+        let im = blocks(seed: 11)
+        let h = Duplicates.hashes(im)
+        let r90 = rotatedCCW(im), r180 = rotatedCCW(r90), r270 = rotatedCCW(r180)
+        #expect(h == [Duplicates.dhash(im), Duplicates.dhash(r90), Duplicates.dhash(r180), Duplicates.dhash(r270)])
+        #expect(Set(h).count == 4)
+    }
+
+    @Test func distanceUsesOnlyTheStoredHashOfTheFirstPhoto() {
+        let a: [UInt64] = [0b1111, 0, 0, 0], b: [UInt64] = [0xFF00, 0b1110, 0xFFFF_FFFF, 0]
+        #expect(Duplicates.distance(a, b) == 1)
+        #expect(Duplicates.distance(b, a) == 8)
+        #expect(Duplicates.distance([], b) == 64)
+    }
+
+    @Test func thumbnailSizeFollowsPillow() {
+        func size(_ w: Int, _ h: Int) -> (Int, Int) {
+            let p = Duplicates.Plane(width: w, height: h, pixels: [UInt8](repeating: 9, count: w * h)).thumbnail(256)
+            return (p.width, p.height)
+        }
+        #expect(size(600, 400) == (256, 171))
+        #expect(size(400, 600) == (171, 256))
+        #expect(size(300, 300) == (256, 256))
+        #expect(size(256, 200) == (256, 200))  // not enlarged, not touched
+        #expect(size(5000, 10) == (256, 1))
+    }
+
     @Test func dhashBitOrderAndComparison() {
         // brightness falls left to right: every pixel is brighter than its right neighbour -> all ones
         let falling = RGBImage(width: 90, height: 80) { x, _ in let v = UInt8(250 - x * 2); return RGB(v, v, v) }
@@ -126,6 +153,22 @@ func rotatedCCW(_ im: RGBImage) -> RGBImage {
         // findDuplicate returns the first candidate matching, never the file itself
         #expect(try index.findDuplicate(of: newest, in: [newest, single, middle, oldest]) == middle)
         #expect(try index.findDuplicate(of: single, in: [newest, middle, oldest, other]) == nil)
+    }
+
+    @Test func readsAnFfscanWrittenCache() throws {
+        let dir = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let url = try write(blocks(seed: 1), "a.jpg", in: dir, age: 10)
+        let mtime = try DuplicateIndex.modificationDate(url).timeIntervalSince1970
+        let cacheFile = dir.appendingPathComponent("dupes.json")
+        // Python json: ints up to 2**64 - 1, float mtime, absolute path keys
+        let json = "{\"\(url.path)\": {\"mtime\": \(mtime), \"h\": [18446744073709551615, 0, 1, 9223372036854775808]}}"
+        try json.write(to: cacheFile, atomically: true, encoding: .utf8)
+        let index = DuplicateIndex(file: cacheFile)
+        #expect(try index.hashes(for: url) == [UInt64.max, 0, 1, 1 << 63] && index.computed == 0)
+        try index.save()
+        let again = DuplicateIndex(file: cacheFile)
+        #expect(try again.hashes(for: url) == [UInt64.max, 0, 1, 1 << 63] && again.computed == 0)
     }
 
     @Test func cacheIsReusedUntilTheModificationDateChanges() throws {
