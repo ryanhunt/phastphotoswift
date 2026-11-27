@@ -1,6 +1,8 @@
 MIT License
 
 Copyright (c) 2026 Ryan Hunt
+Portions derived from ffscan (https://github.com/eg7eg7/ffscan),
+Copyright (c) 2026 ffscan contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
