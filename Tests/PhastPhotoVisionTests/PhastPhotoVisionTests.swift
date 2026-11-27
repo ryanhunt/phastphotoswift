@@ -146,17 +146,20 @@ import Testing
         #expect(v == 42)
     }
 
-    /// Stand-in for a Vision call that won't return: it blocks until the test releases it (or 10 s pass).
-    /// The checks below are "the work was still blocked when we got control back", not wall-clock times:
+    /// Stand-in for a Vision call that won't return: it blocks until the test releases it, or `fallback` seconds
+    /// pass. The checks below are "the work was still blocked when we got control back", not wall-clock times:
     /// when other tests in the process hold every cooperative thread (CI runners have 3 cores), resuming
-    /// after the timeout can take seconds even though the timer fired on time.
+    /// after the timeout took 12-14 s on CI although the timer fired on time. The fallback only ends the
+    /// work if `withVisionTimeout` regresses to waiting for it (the test then fails rather than hangs), so
+    /// it is far longer than any such delay.
     final class StuckWork: @unchecked Sendable {
         private let gate = DispatchSemaphore(value: 0)
         private let lock = NSLock()
         private var _finished = false
         var finished: Bool { lock.withLock { _finished } }
+        static let fallback = 120.0
         func run() -> Int {
-            _ = gate.wait(timeout: .now() + 10)
+            _ = gate.wait(timeout: .now() + Self.fallback)
             lock.withLock { _finished = true }
             return 1
         }
@@ -174,7 +177,8 @@ import Testing
 
     @Test func cancellationThrowsWithoutWaitingForTheWork() async {
         let work = StuckWork()
-        let task = Task { try await withVisionTimeout(seconds: 30) { work.run() } }
+        // no timer: a starved test may only get to cancel after any timeout would have fired
+        let task = Task { try await withVisionTimeout(seconds: nil) { work.run() } }
         try? await Task.sleep(nanoseconds: 100_000_000)
         task.cancel()
         let r = await task.result

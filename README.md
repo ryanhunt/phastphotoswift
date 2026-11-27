@@ -142,6 +142,30 @@ swift run phastphoto scan --dpi 600 --deskew --double-feed 1 --sides picture --o
 swift run phastphoto scan --watch --out scans
 ```
 
+Add `--process` to run each print through `PrintPipeline` while the scan goes on: the untouched scans go to
+`scans/raw`, the kept pictures and backs to `scans`, enhanced copies to `scans/Enhanced`. Processing runs in its
+own task, so the scanner never waits for it:
+
+```bash
+swift run phastphoto scan --sides picture --process --enhance --album "Summer 1974" --out scans
+```
+
+`process` does the same for raw scans saved earlier, for example to try different settings without scanning
+again:
+
+```bash
+swift run phastphoto process --sides picture --no-rotate --out reprocessed scans/raw
+```
+
+Pipeline options: `--no-crop`, `--keep-blank-backs`, `--duplicates flag|skip|off` (default `flag`), `--enhance`,
+`--no-rotate`, and metadata `--album`, `--title`, `--description`, `--place`, `--date YYYY[-MM[-DD]]`,
+`--people "A, B"`, `--tags "X, Y"`. Raw scans keep `RawSpool`'s names (`<stamp>_scan_007_back.jpg`), which is
+how `process` pairs a back with its picture; any other JPEG is processed as a picture of its own. Each print's
+result is printed (saved files, skipped sides and why, back text, rotation, duplicates); a print that fails is
+reported, the run carries on, and the exit status is 1. The first Vision call at a new path can take about a
+minute while models load (`VisionWarmUp`). Release builds (`swift run -c release`) process prints many times
+faster than Debug.
+
 Pass `--host <address>` (or set `PHASTPHOTO_HOST`) to skip Bonjour. `info` hides the serial number unless you
 pass `--show-serial`; `discover --all` lists every Bonjour scanner, not only FF-680Ws.
 

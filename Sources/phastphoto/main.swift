@@ -2,12 +2,17 @@
 //
 //   phastphoto [--host HOST] discover [--all] | info [--show-serial] | capa | status
 //   phastphoto [--host HOST] scan [--dpi N] [--gray] [--quality N] [--deskew] [--double-feed 1|3] [--width IN]
-//                                [--sides picture|both|back|fast] [--watch] [--out DIR]
+//                                [--sides picture|both|back|fast] [--watch] [--out DIR] [--process PIPELINE...]
+//   phastphoto process [--sides MODE] [--out DIR] [PIPELINE...] RAW...
 //
 // Without --host the scanner is found with Bonjour (FF-680W only). PHASTPHOTO_HOST sets a default host.
-// The serial number is hidden unless --show-serial is given.
+// The serial number is hidden unless --show-serial is given. `scan --process` saves the untouched scans in
+// OUT/raw and runs each print through PrintPipeline while the scan goes on; `process` does the same for raw
+// scans saved earlier.
 
 import Foundation
+import PhastPhotoImaging
+import PhastPhotoPipeline
 import PhastPhotoProtocol
 import PhastPhotoScanner
 
@@ -15,7 +20,13 @@ let usage = """
     usage: phastphoto [--host HOST] discover [--all] | info [--show-serial] | capa | status
            phastphoto [--host HOST] scan [--dpi N] [--gray] [--quality N] [--deskew] [--double-feed 1|3]
                                          [--width INCHES] [--sides picture|both|back|fast] [--watch] [--out DIR]
+                                         [--process [PIPELINE OPTIONS]]
+           phastphoto process [--sides picture|both|back|fast] [--out DIR] [PIPELINE OPTIONS] RAW-FILE-OR-FOLDER...
            (--single-sided = --sides fast, --picture-only = --sides picture; default --sides both)
+
+    pipeline options: [--no-crop] [--keep-blank-backs] [--duplicates flag|skip|off] [--enhance] [--no-rotate]
+                      [--album TEXT] [--title TEXT] [--description TEXT] [--place TEXT] [--date YYYY[-MM[-DD]]]
+                      [--people "A, B"] [--tags "X, Y"]
     """
 
 struct UsageError: Error, CustomStringConvertible {
@@ -23,6 +34,8 @@ struct UsageError: Error, CustomStringConvertible {
 }
 
 var arguments = Array(CommandLine.arguments.dropFirst())
+/// Set when a print failed to process: the run still finishes, but exits with status 1.
+var processingFailed = false
 
 @MainActor func option(_ name: String) throws -> String? {
     guard let i = arguments.firstIndex(of: name) else { return nil }
@@ -61,6 +74,59 @@ func printFields(_ fields: ESCI2Fields) {
     for key in fields.keys {
         print("\(key): " + fields[key].map { "[" + $0.map(\.description).joined(separator: ", ") + "]" }.joined(separator: " "))
     }
+}
+
+/// Pipeline settings from the command line (ffscan's defaults otherwise). The metadata is checked here, so a
+/// bad `--date` fails before scanning rather than on every print.
+@MainActor func pipelineSettings() throws -> PrintPipelineSettings {
+    var settings = PrintPipelineSettings()
+    if flag("--no-crop") { settings.crop = false }
+    if flag("--keep-blank-backs") { settings.skipBlankBacks = false }
+    if flag("--enhance") { settings.enhancement = EnhancementOptions() }
+    if flag("--no-rotate") { settings.autoRotate = false }
+    if let duplicates = try option("--duplicates") {
+        guard let parsed = DuplicateMode(rawValue: duplicates) else {
+            throw UsageError(description: "--duplicates takes flag, skip or off")
+        }
+        settings.duplicates = parsed
+    }
+    var md = PhotoMetadata()
+    if let v = try option("--album") { md.album = v }
+    if let v = try option("--title") { md.title = v }
+    if let v = try option("--description") { md.description = v }
+    if let v = try option("--place") { md.place = v }
+    if let v = try option("--date") { md.date = v }
+    if let v = try option("--people") { md.people = PhotoMetadata.list(fromCommaSeparated: v) }
+    if let v = try option("--tags") { md.tags = PhotoMetadata.list(fromCommaSeparated: v) }
+    do {
+        _ = try PhotoMetadata.write(md, to: RGBImage(width: 1, height: 1, fill: RGB(0, 0, 0)).jpegData())
+    } catch PhotoMetadataError.invalidDate(let date) {
+        throw UsageError(description: "--date takes YYYY, YYYY-MM or YYYY-MM-DD, not \(date)")
+    }
+    settings.metadata = md
+    return settings
+}
+
+@MainActor func sideMode(default mode: SideMode) throws -> SideMode {
+    var mode = mode
+    if flag("--single-sided") { mode = .fast }
+    if flag("--picture-only") { mode = .picture }
+    if let sides = try option("--sides") {
+        guard let parsed = SideMode(rawValue: sides) else { throw UsageError(description: "--sides takes picture, both, back or fast") }
+        mode = parsed
+    }
+    return mode
+}
+
+/// "1 print", "2 prints".
+func count(_ n: Int, _ noun: String) -> String { "\(n) \(noun)\(n == 1 ? "" : "s")" }
+
+func summary(_ totals: PrintFolder.Totals) -> String {
+    var line = "\(count(totals.prints, "print")): \(count(totals.picturesSaved, "picture")) and "
+        + "\(count(totals.backsSaved, "back")) saved, \(count(totals.skipped, "side")) skipped"
+    if totals.duplicates > 0 { line += ", \(count(totals.duplicates, "duplicate")) flagged" }
+    if totals.failed > 0 { line += ", \(totals.failed) failed" }
+    return line
 }
 
 func describe(_ page: SpooledPage) -> String {
@@ -124,26 +190,50 @@ func describe(_ page: SpooledPage) -> String {
         }
         if flag("--gray") { settings.colorMode = .gray }
         if flag("--deskew") { settings.hardwareDeskew = true }
-        var mode = SideMode.both
-        if flag("--single-sided") { mode = .fast }
-        if flag("--picture-only") { mode = .picture }
-        if let sides = try option("--sides") {
-            guard let parsed = SideMode(rawValue: sides) else { throw UsageError(description: "--sides takes picture, both, back or fast") }
-            mode = parsed
-        }
+        let mode = try sideMode(default: .both)
         settings = settings.with(sideMode: mode)
         let watch = flag("--watch")
         let out = URL(filePath: try option("--out") ?? "scans", directoryHint: .isDirectory)
+        let process = flag("--process")
+        let pipelineOptions = try pipelineSettings()
+        guard process || pipelineOptions == PrintPipelineSettings() else {
+            throw UsageError(description: "pipeline options need --process")
+        }
+        let processing = process ? pipelineOptions : nil
         try settings.validate()
 
         let target = try await resolve(host: host)
-        let spool = RawSpool(directory: out, mode: mode)
+        let spool = StackedSpool(RawSpool(directory: processing == nil ? out : out.appending(path: "raw"), mode: mode))
         let finalSettings = settings
         let finalMode = mode
 
+        // With --process, every side goes to OUT/raw (picture mode's backs too: their writing is read) and a
+        // separate task runs the pipeline, so the scan loop only ever writes a file.
+        let queue = processing.map { pipelineSettings in
+            ProcessingQueue(spool: spool, folder: PrintFolder(directory: out, mode: mode, settings: pipelineSettings,
+                                                              stamp: spool.stamp))
+        }
+
         @Sendable func handle(_ page: ScannedPage) throws {
-            guard finalMode.keeps(finalMode.relabelled(page.side)) else { return }
-            print(describe(try spool.write(page)))
+            if let queue {
+                print(describe(try queue.add(page)))
+            } else {
+                guard finalMode.keeps(finalMode.relabelled(page.side)) else { return }
+                print(describe(try spool.write(page)))
+            }
+        }
+
+        /// Waits for the pipeline to catch up after the scan (or watch) ends, however it ended.
+        func finishProcessing() async {
+            guard let queue else { return }
+            if queue.queuedPages > 0 { print("processing the remaining prints...") }
+            let totals = await queue.finish()
+            guard totals.prints > 0 else { return }
+            print(summary(totals))
+            if totals.failed > 0 {
+                print("\(count(totals.failed, "print")) failed; the raw scans are in \(out.appending(path: "raw").path)")
+                processingFailed = true
+            }
         }
 
         if watch {
@@ -154,7 +244,9 @@ func describe(_ page: SpooledPage) -> String {
                     case .unreachable(let message): print("scanner not reachable: \(message)")
                     case .stackStarted: print("scanning a stack")
                     case .page(let page): try handle(page)
-                    case .stackFinished(let summary): print("\(summary.pageCount) sides scanned")
+                    case .stackFinished(let summary):
+                        print("\(summary.pageCount) sides scanned")
+                        if let queue { queue.endOfStack() } else { spool.endOfStack() }
                     }
                 }
             }
@@ -162,15 +254,52 @@ func describe(_ page: SpooledPage) -> String {
             let interrupt = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
             interrupt.setEventHandler { task.cancel() }  // hard cancel: sends CAN, then FIN
             interrupt.resume()
-            try await task.value
+            let result = await task.result
+            interrupt.cancel()
+            signal(SIGINT, SIG_DFL)  // a second Ctrl-C while the pipeline catches up quits at once
             print("stopped")
+            await finishProcessing()
+            try result.get()
         } else {
-            let summary = try await ScannerSession.withSession(transport: target.makeTransport()) { session in
-                try await session.scan(finalSettings) { try handle($0) }
+            let summary: ScanSummary
+            do {
+                summary = try await ScannerSession.withSession(transport: target.makeTransport()) { session in
+                    try await session.scan(finalSettings) { try handle($0) }
+                }
+            } catch {
+                await finishProcessing()  // the sides scanned before the error are still processed
+                throw error
             }
             if !summary.blockSizeAccepted { print("note: the scanner rejected #BSZ; scanned with 64 KB blocks") }
             print("\(summary.pageCount) sides scanned")
+            await finishProcessing()
         }
+
+    case "process":
+        let mode = try sideMode(default: .both)
+        let out = URL(filePath: try option("--out") ?? "processed", directoryHint: .isDirectory)
+        let settings = try pipelineSettings()
+        if let unknown = arguments.first(where: { $0.hasPrefix("--") }) {
+            throw UsageError(description: "unknown option \(unknown)\n\(usage)")
+        }
+        guard !arguments.isEmpty else { throw UsageError(description: "process needs raw scans (files or folders)\n\(usage)") }
+        let (prints, ignored) = RawScanFiles.prints(in: try RawScanFiles.jpegs(at: arguments), mode: mode)
+        arguments.removeAll()
+        for (url, reason) in ignored { print("ignored \(url.lastPathComponent): \(reason)") }
+        guard !prints.isEmpty else { throw UsageError(description: "no raw scans to process") }
+        print("processing \(count(prints.count, "print")) (\(mode.rawValue) mode) into \(out.path)")
+        let folder = PrintFolder(directory: out, mode: mode, settings: settings, stamp: RawSpool(directory: out).stamp)
+        for (index, item) in prints.enumerated() {
+            do {
+                for page in try RawScanFiles.pages(of: item, index: index, mode: mode) { await folder.add(page) }
+            } catch {
+                await folder.recordFailure(describe(error))
+            }
+            await folder.endOfStack()
+        }
+        let totals = await folder.finish()
+        print(summary(totals))
+        if totals.failed > 0 { processingFailed = true }
 
     default:
         throw UsageError(description: usage)
@@ -180,6 +309,7 @@ func describe(_ page: SpooledPage) -> String {
 
 do {
     try await run()
+    if processingFailed { exit(1) }
 } catch {
     FileHandle.standardError.write(Data("error: \((error as? LocalizedError)?.errorDescription ?? String(describing: error))\n".utf8))
     exit(1)
