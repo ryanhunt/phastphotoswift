@@ -34,6 +34,16 @@ import Testing
         _ = im.removingRedEye([EyePosition(x: -5, y: 40, radius: 8), EyePosition(x: 0, y: 0, radius: 6)])
     }
 
+    @Test func hostileInputsDoNotTrap() {
+        let im = RGBImage(width: 8, height: 8, fill: RGB(200, 20, 20))
+        _ = im.removingRedEye([EyePosition(x: .nan, y: 1, radius: 2), EyePosition(x: 1e300, y: -1e300, radius: .infinity),
+                               EyePosition(x: 4, y: 4, radius: 1e300)])
+        let warm = im.adjusted(ManualAdjustments(warmth: -1000))  // negative factor clips to 0 like Pillow's point()
+        #expect(warm[0, 0].r == 0 && warm[0, 0].b == 81)
+        let cold = im.adjusted(ManualAdjustments(warmth: 1000))
+        #expect(cold[0, 0].r == 255 && cold[0, 0].b == 0)
+    }
+
     // MARK: - Pillow parity (reference values computed with Pillow's ImageOps/ImageEnhance on this image)
 
     /// Deterministic 24x16 faded-looking image; the same formula builds the reference in Python.

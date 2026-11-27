@@ -70,9 +70,12 @@ extension RGBImage {
         let w = width, h = height
         out.pixels.withUnsafeMutableBufferPointer { p in
             for eye in eyes {
-                let r = max(3, eye.radius * 1.1)
-                let y0 = max(0, Int(eye.y - r)), y1 = min(h, Int(eye.y + r) + 1)
-                let x0 = max(0, Int(eye.x - r)), x1 = min(w, Int(eye.x + r) + 1)
+                // Python cannot overflow here; Swift traps on Int(NaN or huge), so skip bad eyes and bound the values.
+                guard eye.x.isFinite, eye.y.isFinite, eye.radius.isFinite else { continue }
+                let r = min(1e9, max(3, eye.radius * 1.1))
+                func bound(_ v: Double) -> Int { Int(max(-1e9, min(1e9, v))) }
+                let y0 = max(0, bound(eye.y - r)), y1 = min(h, bound(eye.y + r) + 1)
+                let x0 = max(0, bound(eye.x - r)), x1 = min(w, bound(eye.x + r) + 1)
                 guard y0 < y1, x0 < x1 else { continue }
                 for y in y0 ..< y1 {
                     for x in x0 ..< x1 {
@@ -148,8 +151,9 @@ extension RGBImage {
             let count = width * height
             im.pixels.withUnsafeMutableBufferPointer { p in
                 for i in 0 ..< count {
-                    p[i * 3] = UInt8(min(255, (Double(p[i * 3]) * (1 + k)).rounded(.toNearestOrEven)))
-                    p[i * 3 + 2] = UInt8(min(255, (Double(p[i * 3 + 2]) * (1 - k)).rounded(.toNearestOrEven)))
+                    // Sliders beyond -50...50 (upstream does not clamp) would make a negative factor; clip instead of trapping.
+                    p[i * 3] = UInt8(max(0, min(255, (Double(p[i * 3]) * (1 + k)).rounded(.toNearestOrEven))))
+                    p[i * 3 + 2] = UInt8(max(0, min(255, (Double(p[i * 3 + 2]) * (1 - k)).rounded(.toNearestOrEven))))
                 }
             }
         }
