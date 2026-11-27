@@ -46,9 +46,9 @@ public struct GPSLocation: Equatable, Sendable {
 /// | tags | `dc:subject` | | Keywords |
 /// | date | `photoshop:DateCreated` | `DateTimeOriginal` | |
 ///
-/// IPTC: ImageIO does not write a legacy IPTC (Photoshop 8BIM) record. It stores XMP and reports the IPTC
-/// properties by mapping them back from XMP when reading, so tools that only read the IPTC record (rare, old
-/// software) will not see these fields; XMP and EXIF readers will.
+/// IPTC: ImageIO syncs the XMP fields into a legacy IPTC record (Photoshop 8BIM resource) when it writes, and
+/// reports the IPTC properties on read. That was observed on macOS for a fully filled record; which fields get
+/// an IPTC entry for sparser input is up to ImageIO, so XMP is the reliable copy. Not verified on iOS at runtime.
 public struct PhotoMetadata: Equatable, Sendable {
     public var title: String
     public var description: String
@@ -136,13 +136,17 @@ public struct PhotoMetadata: Equatable, Sendable {
         }
 
         if !metadata.date.isEmpty {
+            // Stricter than upstream (which accepts a fourth part and out-of-range months/days): such dates
+            // would write a nonsense EXIF value.
             let parts = metadata.date.replacingOccurrences(of: "/", with: "-").split(separator: "-", omittingEmptySubsequences: false)
-            let numbers = parts.prefix(3).map { Int($0) }
-            guard (1...3).contains(parts.count), parts.count <= 3, !numbers.contains(nil), let year = numbers[0] else {
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+            let numbers = parts.map { Int($0) }
+            guard (1...3).contains(parts.count), !numbers.contains(nil), let year = numbers[0], (1...9999).contains(year) else {
                 throw PhotoMetadataError.invalidDate(metadata.date)
             }
             let month = numbers.count > 1 ? numbers[1]! : 1
             let day = numbers.count > 2 ? numbers[2]! : 1
+            guard (1...12).contains(month), (1...31).contains(day) else { throw PhotoMetadataError.invalidDate(metadata.date) }
             let exif = String(format: "%04d:%02d:%02d 00:00:00", year, month, day)
             set("exif:DateTimeOriginal", exif)
             set("photoshop:DateCreated", parts.joined(separator: "-"))  // upstream writes the text as typed; "/" is normalised so ImageIO does not mangle the EXIF date

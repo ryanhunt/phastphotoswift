@@ -90,6 +90,12 @@ import Testing
         #expect(throws: PhotoMetadataError.invalidDate("last summer")) {
             try PhotoMetadata.write(PhotoMetadata(date: "last summer"), to: try syntheticJPEG())
         }
+        #expect(try exifDate(" 1974 / 03 / 09 ") == "1974-03-09")
+        for bad in ["1974-13", "1974-03-32", "0000", "1974-00-10"] {
+            #expect(throws: PhotoMetadataError.invalidDate(bad)) {
+                try PhotoMetadata.write(PhotoMetadata(date: bad), to: try syntheticJPEG())
+            }
+        }
         #expect(throws: PhotoMetadataError.invalidDate("1974-03-09-1")) {
             try PhotoMetadata.write(PhotoMetadata(date: "1974-03-09-1"), to: try syntheticJPEG())
         }
