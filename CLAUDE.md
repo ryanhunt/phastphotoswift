@@ -23,6 +23,8 @@ xcodebuild -scheme PhastPhoto-Package -destination 'generic/platform=iOS Simulat
 swift run phastphoto discover|info|capa|status  # against a real scanner on the network
 swift run phastphoto scan --dpi 300 --out scans [--process]
 swift run phastphoto process --sides picture --out reprocessed scans/raw   # no scanner needed
+xcodebuild -project Examples/PhastPhotoHarness/PhastPhotoHarness.xcodeproj -scheme PhastPhotoHarness \
+  -destination 'generic/platform=iOS Simulator' build   # iOS test app; `xcodegen generate` there after adding files
 ```
 
 ## Layout
@@ -37,6 +39,7 @@ swift run phastphoto process --sides picture --out reprocessed scans/raw   # no 
 | `Sources/CPhastPhotoDriverKit` | C client for the iPadOS USB driver (IOKit has no Swift module on iOS) and `PhastPhotoUSBProtocol.h`, the selectors shared with the driver |
 | `Drivers/PhastPhotoUSBDriver` | DriverKit driver extension (C++, `.iig`) apps embed for USB on M-series iPads, and `TestHost`, an iPad app that embeds it for on-device checks; `project.yml` (XcodeGen). Signing in a git-ignored `Config/Local.xcconfig` (paid team). Worked on an iPad Pro M1 |
 | `Sources/phastphoto` | Developer CLI: `main.swift` (arguments, commands), `PrintFolder.swift` (`PrintFolder` saves pipeline results, `ProcessingQueue` for `scan --process`, `RawScanFiles` pairs saved raw scans); tested by `Tests/phastphotoTests` |
+| `Examples/PhastPhotoHarness` | SwiftUI iOS/iPadOS app for roadmap 1.1's device checks (discovery and permission, info/status, scan → pipeline, time and peak memory per print, synthetic sample). XcodeGen `project.yml`; the generated project is committed; team unset (`Config/Local.xcconfig`, git-ignored) |
 | `Tests/PhastPhotoScannerTests/SimulatedScanner.swift` | In-memory ESC/I-2 scanner that enforces the reply rules; `ISTestServer` (loopback "IS" server) is in `NetworkTransportTests.swift` |
 
 Imaging code works on synthetic images in tests; per-pixel loops are ~200x slower in Debug, so keep test images

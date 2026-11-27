@@ -1,0 +1,77 @@
+# XcodeGen spec for the device test harness. The generated PhastPhotoHarness.xcodeproj is committed, so
+# XcodeGen is only needed after changing this file or adding a source file: `xcodegen generate`.
+name: PhastPhotoHarness
+options:
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+packages:
+  PhastPhoto:
+    path: ../..
+targets:
+  PhastPhotoHarness:
+    type: application
+    platform: iOS
+    sources:
+      - PhastPhotoHarness
+    configFiles:
+      Debug: Config/Harness.xcconfig
+      Release: Config/Harness.xcconfig
+    settings:
+      base:
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGN_STYLE: Automatic
+        PRODUCT_BUNDLE_IDENTIFIER: $(HARNESS_BUNDLE_ID)
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: PhastPhotoHarness/Info.plist
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+    info:
+      path: PhastPhotoHarness/Info.plist
+      properties:
+        CFBundleDisplayName: PhastPhoto Harness
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSLocalNetworkUsageDescription: Finds and talks to your Epson FastFoto FF-680W scanner on the local network.
+        NSBonjourServices:
+          - _scanner._tcp
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        ITSAppUsesNonExemptEncryption: false
+        UIApplicationSupportsIndirectInputEvents: true
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+    dependencies:
+      - package: PhastPhoto
+        product: PhastPhotoScanner
+      - package: PhastPhoto
+        product: PhastPhotoImaging
+      - package: PhastPhoto
+        product: PhastPhotoVision
+      - package: PhastPhoto
+        product: PhastPhotoPipeline
+      - package: PhastPhoto
+        product: PhastPhotoProtocol
+schemes:
+  PhastPhotoHarness:
+    build:
+      targets:
+        PhastPhotoHarness: all
+    run:
+      # Release by default: per-pixel imaging loops are about 200 times slower in Debug, so Debug timings
+      # say nothing about a device. Switch to Debug in the scheme to step through code.
+      config: Release
+    archive:
+      config: Release
