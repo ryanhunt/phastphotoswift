@@ -94,7 +94,11 @@ All pixel work is in stored orientation: never apply EXIF orientation before cro
 
 ## Phase 1: hardware check [HW]
 
-**1.1 Checklist with a real FF-680W**, using 0.5's CLI (with `--process`, 9.2, to see crops and back text):
+**1.1 Checklist with a real FF-680W**, using 0.5's CLI (with `--process`, 9.2, to see crops and back text).
+*Paper end, found 27 Nov 2026 (firmware 18.60.SP14P2):* `PEDT` only works together with `CRP `. Hardware crop is now
+on by default, and those pages skip software crop (PROTOCOL.md, "Things that are easy to get wrong"). Still to
+check: software straightening of hardware-cropped prints that come through slightly tilted; `--no-hardware-crop`
+on newer firmware.
 - `status` with feeder empty, loaded, cover open.
 - Duplex scans at 300 and 600 dpi with deskew + DFL1.
 - Single-sided, face down.

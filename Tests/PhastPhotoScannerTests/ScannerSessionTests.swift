@@ -65,6 +65,20 @@ struct TestFailure: Error {}
         #expect(await scanner.parameterBlocks == [ScanSettings().parameterBlock()])
     }
 
+    /// Pages say whether the scanner cut them to the paper, so processing can skip software crop.
+    @Test(arguments: [true, false])
+    func pagesCarryHardwareCrop(hardwareCrop: Bool) async throws {
+        let scanner = SimulatedScanner()
+        await scanner.configure { $0.imageReplies = Self.onePrintDuplex(fakeScanJPEG(), fakeScanJPEG()) }
+        var flags: [Bool] = []
+        try await ScannerSession.withSession(transport: SimulatedTransport(scanner: scanner)) { session in
+            for try await page in session.pages(ScanSettings(hardwareCrop: hardwareCrop)) { flags.append(page.hardwareCropped) }
+        }
+        #expect(flags == [hardwareCrop, hardwareCrop])
+        #expect(ScannedPage(index: 0, side: .a, width: 1, height: 1, jpeg: Data(), hardwareCropped: hardwareCrop)
+            .relabelled(as: .b).hardwareCropped == hardwareCrop)
+    }
+
     @Test func pagesStream() async throws {
         let scanner = SimulatedScanner()
         await scanner.configure { $0.imageReplies = Self.onePrintDuplex(fakeScanJPEG(), fakeScanJPEG()) }

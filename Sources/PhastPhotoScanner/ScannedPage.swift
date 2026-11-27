@@ -44,21 +44,27 @@ public struct ScannedPage: Hashable, Sendable {
     /// The JPEG, its SOF height already corrected. It still includes the scanner's grey backing; crop in software.
     public let jpeg: Data
     public let stats: TransferStats
+    /// Scanned with ``ScanSettings/hardwareCrop``: the image is cut to the paper, with no backing around it.
+    /// Software crop needs that backing to find the print, so the pipeline skips it for these pages.
+    public let hardwareCropped: Bool
 
-    public init(index: Int, side: Side, width: Int, height: Int, jpeg: Data, stats: TransferStats = TransferStats()) {
+    public init(index: Int, side: Side, width: Int, height: Int, jpeg: Data, stats: TransferStats = TransferStats(),
+                hardwareCropped: Bool = false) {
         self.index = index
         self.side = side
         self.width = width
         self.height = height
         self.jpeg = jpeg
         self.stats = stats
+        self.hardwareCropped = hardwareCropped
     }
 }
 
 extension ScannedPage {
     /// The same page under another side label (fast mode relabels A as B: ``SideMode/relabelled(_:)``).
     public func relabelled(as side: Side) -> ScannedPage {
-        ScannedPage(index: index, side: side, width: width, height: height, jpeg: jpeg, stats: stats)
+        ScannedPage(index: index, side: side, width: width, height: height, jpeg: jpeg, stats: stats,
+                    hardwareCropped: hardwareCropped)
     }
 }
 

@@ -44,6 +44,13 @@ public struct ScanSettings: Hashable, Sendable {
     /// Hardware deskew (`SKEW`). Prints still come through slightly tilted; straighten in software too.
     public var hardwareDeskew: Bool
     public var doubleFeedDetection: DoubleFeedDetection
+    /// Hardware crop (`CRP `), sent next to `PEDT` as SANE's epsonds backend does (sane-backends MR 919). On
+    /// by default: on FF-680W firmware 18.60 paper-end detection only takes effect with it, and without it every
+    /// page runs to ``maximumLengthInches`` (36 in of backing below the print) and a stack stops after the first
+    /// print. With it, each page is cut to the paper (an A4 print came back 8.3 x 11.75 in, an 80 mm receipt
+    /// 3.1 in wide). The pages then have no backing around them, so don't crop them in software again
+    /// (``ScannedPage/hardwareCropped`` tells the pipeline).
+    public var hardwareCrop: Bool
     /// JPEG quality, 1–100.
     public var jpegQuality: Int
     public var gamma: Gamma
@@ -65,7 +72,8 @@ public struct ScanSettings: Hashable, Sendable {
         gamma: Gamma = .standard,
         maximumLengthInches: Double = 36,
         widthInches: Double = 8.5,
-        blockSize: Int? = ScanSettings.defaultBlockSize
+        blockSize: Int? = ScanSettings.defaultBlockSize,
+        hardwareCrop: Bool = true
     ) {
         self.resolution = resolution
         self.colorMode = colorMode
@@ -77,6 +85,7 @@ public struct ScanSettings: Hashable, Sendable {
         self.maximumLengthInches = maximumLengthInches
         self.widthInches = widthInches
         self.blockSize = blockSize
+        self.hardwareCrop = hardwareCrop
     }
 
     public enum ValidationError: Error, Hashable, Sendable, CustomStringConvertible {
@@ -128,9 +137,18 @@ public struct ScanSettings: Hashable, Sendable {
         Int(max(minimumWidthInches, min(feederWidthInches, widthInches)) * Double(resolution))
     }
 
-    /// The `#ADF` flags: `DPLX`, `PEDT` (stop at the end of the paper), `SKEW`, `DFL1`/`DFL3`.
-    /// `CRP ` (hardware crop) is accepted but has no visible effect, so it is never sent.
+    /// The `#ADF` flags: `DPLX`, `PEDT` (stop at the end of the paper), `SKEW`, `DFL1`/`DFL3`, and `CRP ` with
+    /// ``hardwareCrop``, in SANE's order (`DPLX`, `SKEW`, `CRP `, `PEDT`).
     public var feederFlags: String {
+        if hardwareCrop {
+            var flags = (duplex ? "DPLX" : "") + (hardwareDeskew ? "SKEW" : "") + "CRP PEDT"
+            switch doubleFeedDetection {
+            case .off: break
+            case .level1: flags += "DFL1"
+            case .level3: flags += "DFL3"
+            }
+            return flags
+        }
         var flags = (duplex ? "DPLX" : "") + "PEDT" + (hardwareDeskew ? "SKEW" : "")
         switch doubleFeedDetection {
         case .off: break

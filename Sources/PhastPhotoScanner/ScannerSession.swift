@@ -210,7 +210,7 @@ public actor ScannerSession {
         try checkAbort()
         _ = try await exchange(.startTransfer)
         do {
-            let result = try await receivePages(duplex: settings.duplex, onPage: onPage)
+            let result = try await receivePages(duplex: settings.duplex, hardwareCropped: settings.hardwareCrop, onPage: onPage)
             return ScanSummary(pageCount: result.delivered, blockSizeAccepted: blockSizeAccepted, stoppedEarly: result.stopped)
         } catch {
             _ = try? await exchange(.cancel)
@@ -271,7 +271,7 @@ public actor ScannerSession {
     /// Poll `IMG ` until the transfer is finished. Never stop while it returns empty replies: stopping early
     /// aborts the page, the print still ejects, and the scanner then reports a jam.
     private func receivePages(
-        duplex: Bool, onPage: @Sendable (ScannedPage) async throws -> Void
+        duplex: Bool, hardwareCropped: Bool, onPage: @Sendable (ScannedPage) async throws -> Void
     ) async throws -> (delivered: Int, stopped: Bool) {
         let clock = ContinuousClock()
         var index = 0
@@ -304,7 +304,7 @@ public actor ScannerSession {
                let width = end[0].integerValue, let height = end[1].integerValue {
                 let jpeg = try JPEGHeight.replacing(in: parts.removeValue(forKey: side) ?? Data(), with: height)
                 let page = ScannedPage(index: index, side: side, width: width, height: height, jpeg: jpeg,
-                                       stats: stats.removeValue(forKey: side) ?? .init())
+                                       stats: stats.removeValue(forKey: side) ?? .init(), hardwareCropped: hardwareCropped)
                 try await onPage(page)
                 delivered += 1
                 let printComplete = side == .b || !duplex

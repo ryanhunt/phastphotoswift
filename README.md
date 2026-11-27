@@ -157,6 +157,11 @@ again:
 swift run phastphoto process --sides picture --no-rotate --out reprocessed scans/raw
 ```
 
+Scans use hardware crop by default: the scanner stops at the end of each print and cuts each side to the paper
+(on firmware 18.60 it otherwise ignores the end of the paper and returns 36 in pages). `scan --no-hardware-crop`
+turns it off, and `scan --length INCHES` sets the longest print (default 36). `process` assumes raws from such
+scans; give it `--software-crop` for raws that still have the grey backing around the print.
+
 Pipeline options: `--no-crop`, `--keep-blank-backs`, `--duplicates flag|skip|off` (default `flag`), `--enhance`,
 `--no-rotate`, and metadata `--album`, `--title`, `--description`, `--place`, `--date YYYY[-MM[-DD]]`,
 `--people "A, B"`, `--tags "X, Y"`. Raw scans keep `RawSpool`'s names (`<stamp>_scan_007_back.jpg`), which is

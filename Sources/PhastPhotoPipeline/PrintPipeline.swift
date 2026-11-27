@@ -18,6 +18,8 @@ public enum DuplicateMode: String, Hashable, Sendable {
 /// scanned and kept comes from the print's ``SideMode``.
 public struct PrintPipelineSettings: Equatable, Sendable {
     /// Crop each saved side to the print (``AutoCrop``). Backs are always cropped for reading, as upstream.
+    /// Pages the scanner already cut to the paper (``ScannedPage/hardwareCropped``) are never cropped again:
+    /// with no backing around them, software crop finds a wrong box.
     public var crop: Bool
     /// Drop backs with no writing (picture-and-back scans; never in back mode).
     public var skipBlankBacks: Bool
@@ -148,27 +150,33 @@ public struct PrintPipeline: Sendable {
 
     /// Process a print from ``PrintAssembler``.
     public func process(_ print: AssembledPrint) async throws -> ProcessedPrint {
-        try await process(index: print.index, mode: print.mode, picture: print.picture?.jpeg, back: print.back?.jpeg)
+        let hardwareCropped = print.picture?.hardwareCropped ?? print.back?.hardwareCropped ?? false
+        return try await process(index: print.index, mode: print.mode, picture: print.picture?.jpeg,
+                                 back: print.back?.jpeg, hardwareCropped: hardwareCropped)
     }
 
     /// Process a print given as JPEG data, as the scanner sent it (backing included).
     /// - Parameters:
     ///   - picture: the picture side (side B; side A in fast mode), if scanned.
     ///   - back: the back of the print (side A in picture, both and back modes), if scanned.
-    public func process(index: Int, mode: SideMode, picture: Data?, back: Data?) async throws -> ProcessedPrint {
+    ///   - hardwareCropped: the scanner already cut both sides to the paper (``ScanSettings/hardwareCrop``):
+    ///     skip software crop.
+    public func process(index: Int, mode: SideMode, picture: Data?, back: Data?,
+                        hardwareCropped: Bool = false) async throws -> ProcessedPrint {
         var result = ProcessedPrint(index: index, backText: "", back: nil, picture: nil, warnings: [])
         let sides = BackPolicy.Sides(mode)
 
         // 1. Back text, once per print: the back's own blank check and the picture's metadata use it. Back mode
         // uses neither, so it isn't read there.
-        var backCrop: AutoCrop.Result?
+        var backCrop: RGBImage?
         var backReadFailed = false
         if let back, mode != .back {
-            let crop = AutoCrop.crop(try RGBImage.decode(back))
+            let decoded = try RGBImage.decode(back)
+            let crop = hardwareCropped ? decoded : AutoCrop.crop(decoded).image
             backCrop = crop
             do {
-                result.backText = try await BackPolicy.readBack(ink: InkFraction.of(crop.image)) {
-                    BackText.humanText(try await analyzer.readBack(crop.image))
+                result.backText = try await BackPolicy.readBack(ink: InkFraction.of(crop)) {
+                    BackText.humanText(try await analyzer.readBack(crop))
                 }
             } catch {
                 backReadFailed = true
@@ -178,21 +186,21 @@ public struct PrintPipeline: Sendable {
 
         // 2. Side filter; then each kept side in scan order.
         if let back, mode.keeps(.a) {
-            result.back = try await processBack(back, crop: backCrop, sides: sides, backText: result.backText,
-                                                backReadFailed: backReadFailed)
+            result.back = try await processBack(back, crop: backCrop, hardwareCropped: hardwareCropped, sides: sides,
+                                                backText: result.backText, backReadFailed: backReadFailed)
         }
         if let picture, mode.keeps(.b) {
-            result.picture = try await processPicture(picture, sides: sides, backText: result.backText,
-                                                      warnings: &result.warnings)
+            result.picture = try await processPicture(picture, hardwareCropped: hardwareCropped, sides: sides,
+                                                      backText: result.backText, warnings: &result.warnings)
         }
         return result
     }
 
     // MARK: - Sides
 
-    private func processBack(_ raw: Data, crop: AutoCrop.Result?, sides: BackPolicy.Sides, backText: String,
-                             backReadFailed: Bool) async throws -> SideOutcome {
-        let (image, jpeg) = try cropped(raw, reusing: crop)
+    private func processBack(_ raw: Data, crop: RGBImage?, hardwareCropped: Bool, sides: BackPolicy.Sides,
+                             backText: String, backReadFailed: Bool) async throws -> SideOutcome {
+        let (image, jpeg) = try cropped(raw, reusing: crop, hardwareCropped: hardwareCropped)
         var ink: Double?
         if settings.skipBlankBacks, sides != .back {  // the only rule for a back (`app.py:443`)
             let measured = InkFraction.of(image)
@@ -210,9 +218,9 @@ public struct PrintPipeline: Sendable {
                                     metadata: metadata, ink: ink))
     }
 
-    private func processPicture(_ raw: Data, sides: BackPolicy.Sides, backText: String,
+    private func processPicture(_ raw: Data, hardwareCropped: Bool, sides: BackPolicy.Sides, backText: String,
                                 warnings: inout [String]) async throws -> SideOutcome {
-        let (image, jpeg) = try cropped(raw, reusing: nil)
+        let (image, jpeg) = try cropped(raw, reusing: nil, hardwareCropped: hardwareCropped)
 
         // 5. Fast mode: a blank face-down side is the back of a print loaded face up.
         var ink: Double?
@@ -267,11 +275,15 @@ public struct PrintPipeline: Sendable {
     // MARK: - Helpers
 
     /// 3. The side as it will be saved: cropped and re-encoded once at quality 0.95 with the scan's metadata, or
-    /// the scan as sent when cropping is off. Returns the pixels too, for ink and Vision.
-    private func cropped(_ raw: Data, reusing crop: AutoCrop.Result?) throws -> (RGBImage, Data) {
+    /// the scan as sent when cropping is off or the scanner already cut it to the paper. Returns the pixels too,
+    /// for ink and Vision. `crop` is the back's crop, already made for reading it.
+    private func cropped(_ raw: Data, reusing crop: RGBImage?, hardwareCropped: Bool) throws -> (RGBImage, Data) {
+        // the scanner's own cut: for a back, `crop` is that same decoded image
+        if hardwareCropped { return (try crop ?? RGBImage.decode(raw), raw) }
+        // crop off: the scan as sent (not the back's reading crop), like upstream's ink on the saved file
         guard settings.crop else { return (try RGBImage.decode(raw), raw) }
-        let result = try crop ?? AutoCrop.crop(RGBImage.decode(raw))
-        return (result.image, try result.image.jpegData(quality: 0.95, copyingMetadataFrom: raw))
+        let image = try crop ?? AutoCrop.crop(RGBImage.decode(raw)).image
+        return (image, try image.jpegData(quality: 0.95, copyingMetadataFrom: raw))
     }
 
     /// Metadata (only when there is some, like `write_metadata`) and then the orientation tag (only when

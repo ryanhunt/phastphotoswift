@@ -21,3 +21,6 @@ NOTES.local.md
 
 # Agent worktrees
 .claude/worktrees/
+
+# Signing for on-device builds of Drivers/
+Drivers/**/Local.xcconfig
