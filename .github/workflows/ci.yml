@@ -14,8 +14,26 @@ jobs:
         run: swift --version && xcodebuild -version
       - name: Build and test (macOS)
         run: swift test
-      - name: Build (iOS Simulator)
-        run: xcodebuild -scheme PhastPhoto-Package -destination 'generic/platform=iOS Simulator' build
+
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        run: xcodebuild -version
+      - name: Test (iOS Simulator)
+        # The first available iPhone simulator: the models installed change with the runner image.
+        # Vision is not real on the simulator, and USB is macOS-only, so those tests run in the macOS job.
+        run: |
+          id=$(xcrun simctl list devices available | grep -m1 -E '^ +iPhone' \
+            | grep -oE '[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}' || true)
+          if [ -z "$id" ]; then
+            echo "no iPhone simulator available"; xcrun simctl list devices available; exit 1
+          fi
+          echo "Simulator: $(xcrun simctl list devices available | grep "$id" | sed 's/^ *//')"
+          xcodebuild test -scheme PhastPhoto-Package -destination "platform=iOS Simulator,id=$id"
+      - name: Build (iOS device)
+        run: xcodebuild -scheme PhastPhoto-Package -destination 'generic/platform=iOS' build CODE_SIGNING_ALLOWED=NO
 
   driver:
     runs-on: macos-latest
