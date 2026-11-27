@@ -10,33 +10,56 @@ public enum VisionError: Error, Hashable, Sendable {
     case failed(String)
 }
 
-/// Resumes a continuation exactly once, from whichever of the work and the timer finishes first.
+/// Resumes a continuation exactly once, from whichever of the work, the timer and task cancellation comes first.
 private final class Race<T: Sendable>: @unchecked Sendable {
     private let lock = NSLock()
     private var continuation: CheckedContinuation<T, Error>?
-    init(_ continuation: CheckedContinuation<T, Error>) { self.continuation = continuation }
+    private var pending: Result<T, Error>?
+    private var done = false
+    func install(_ continuation: CheckedContinuation<T, Error>) {
+        lock.lock()
+        if let early = pending {
+            pending = nil
+            lock.unlock()
+            continuation.resume(with: early)
+        } else {
+            self.continuation = continuation
+            lock.unlock()
+        }
+    }
     func finish(_ result: Result<T, Error>) {
         lock.lock()
+        if done { lock.unlock(); return }
+        done = true
         let c = continuation
         continuation = nil
+        if c == nil { pending = result }
         lock.unlock()
         c?.resume(with: result)
     }
 }
 
 private let visionQueue = DispatchQueue(label: "phastphoto.vision", qos: .userInitiated, attributes: .concurrent)
+/// Timers run on their own queue so blocked Vision calls can never starve them.
+private let timerQueue = DispatchQueue(label: "phastphoto.vision.timer", qos: .userInitiated)
 
-/// Runs blocking Vision `work` off the caller's executor and gives up after `seconds`.
+/// Runs blocking Vision `work` off the caller's executor and gives up after `seconds` (or when the calling
+/// task is cancelled, which throws `CancellationError`).
 ///
 /// A task group would wait for the Vision call (it cannot be cancelled) and so never time out; this races a
 /// timer against the work with one continuation instead. Vision itself keeps running after a timeout.
 func withVisionTimeout<T: Sendable>(seconds: Double?, _ work: @escaping @Sendable () throws -> T) async throws -> T {
-    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<T, Error>) in
-        let race = Race(continuation)
-        visionQueue.async { race.finish(Result { try work() }) }
-        if let seconds {
-            visionQueue.asyncAfter(deadline: .now() + seconds) { race.finish(.failure(VisionError.timedOut(seconds: seconds))) }
+    let race = Race<T>()
+    return try await withTaskCancellationHandler {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<T, Error>) in
+            race.install(continuation)
+            visionQueue.async { race.finish(Result { try work() }) }
+            if let seconds {
+                timerQueue.asyncAfter(deadline: .now() + seconds) { race.finish(.failure(VisionError.timedOut(seconds: seconds))) }
+            }
         }
+    } onCancel: {
+        race.finish(.failure(CancellationError()))
     }
 }
 

@@ -38,7 +38,9 @@ public enum AutoRotation {
         guard scores.count == 4, let top = scores.max(), let best = scores.firstIndex(of: top) else {
             return RotationDecision(degrees: 0, decided: false)
         }
-        if top - scores[0] >= margin { return RotationDecision(degrees: best * 90, decided: true) }
+        // orient.swift prints the scores with "%.3f" and app.py compares the parsed values, so compare rounded.
+        func r3(_ x: Double) -> Double { Double(String(format: "%.3f", x)) ?? x }
+        if r3(top) - r3(scores[0]) >= margin { return RotationDecision(degrees: best * 90, decided: true) }
         return RotationDecision(degrees: 0, decided: false)
     }
 
@@ -77,7 +79,10 @@ public enum AutoRotation {
     /// "no opinion" rather than an error, like upstream when the helper is missing.
     public static func rotation(of image: RGBImage, timeout: Double? = 60) async -> RotationDecision {
         let undecided = RotationDecision(degrees: 0, decided: false)
-        guard let rolls = try? await faceRolls(image, timeout: timeout) else { return undecided }
+        let rolls: [Double]
+        do { rolls = try await faceRolls(image, timeout: timeout) } catch VisionError.failed {
+            rolls = []  // orient.swift logs a failed face request and carries on with no faces
+        } catch { return undecided }
         if !rolls.isEmpty { return decide(faceRolls: rolls, sceneScores: { [] }) }
         guard let scores = try? await sceneScores(image, timeout: timeout) else { return undecided }
         return decide(sceneScores: scores)

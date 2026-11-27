@@ -108,6 +108,13 @@ import Testing
         #expect(d([1, 2]) == RotationDecision(degrees: 0, decided: false))  // malformed
     }
 
+    @Test func sceneScoresCompareAtThreeDecimals() {
+        // 1.0004 rounds to 1.000 (decided); 0.9996 rounds to 1.000 too, as the "%.3f" round trip upstream
+        #expect(AutoRotation.decide(sceneScores: [0.0, 1.0004, 0, 0]).decided)
+        #expect(AutoRotation.decide(sceneScores: [0.0, 0.9996, 0, 0]).decided)
+        #expect(!AutoRotation.decide(sceneScores: [0.0, 0.9994, 0, 0]).decided)
+    }
+
     @Test func noFacesFallsBackToScene() {
         let d = AutoRotation.decide(faceRolls: []) { [0.2, 0.3, 0.2, 2.5] }
         #expect(d == RotationDecision(degrees: 270, decided: true))
@@ -145,6 +152,16 @@ import Testing
             try await withVisionTimeout(seconds: 0.2) { Thread.sleep(forTimeInterval: 2); return 1 }
         }
         #expect(Date().timeIntervalSince(start) < 1.5)
+    }
+
+    @Test func cancellationThrowsPromptly() async {
+        let task = Task { try await withVisionTimeout(seconds: 30) { Thread.sleep(forTimeInterval: 2); return 1 } }
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        task.cancel()
+        let start = Date()
+        let r = await task.result
+        #expect(Date().timeIntervalSince(start) < 1.5)
+        if case .failure(let e) = r { #expect(e is CancellationError) } else { Issue.record("should have thrown") }
     }
 
     @Test func propagatesWorkErrors() async {
