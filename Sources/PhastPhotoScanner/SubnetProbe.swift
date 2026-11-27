@@ -92,7 +92,7 @@ public enum SubnetProbe {
         await withTaskGroup(of: (Int, Bool).self) { group in
             var next = 0
             func addNext() {
-                guard next < candidates.count else { return }
+                guard next < candidates.count, !Task.isCancelled else { return }
                 let index = next, candidate = candidates[next]
                 next += 1
                 group.addTask {

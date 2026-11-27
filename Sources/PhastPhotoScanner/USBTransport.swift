@@ -69,7 +69,9 @@ public actor USBTransport: ScannerTransport {
 
     /// Whether a scanner is plugged in (without claiming it).
     public static func isScannerPresent() -> Bool {
-        IOUSBHostPipes.findService(IOUSBHostPipes.deviceMatching()) != nil
+        guard let service = IOUSBHostPipes.findService(IOUSBHostPipes.deviceMatching()) else { return false }
+        IOObjectRelease(service)
+        return true
     }
 
     public func open() async throws {
@@ -240,11 +242,17 @@ final class IOUSBHostPipes: USBPipes, @unchecked Sendable {
         interface = nil
     }
 
+    /// `kIOReturnTimeout` and `kIOUSBTransactionTimeout` (0xE0004051). The domain is not checked: it is
+    /// unverified which one IOUSBHost reports.
+    private static let timeoutCodes: Set<Int> = [
+        Int(Int32(truncatingIfNeeded: kIOReturnTimeout)), Int(Int32(bitPattern: 0xE000_4051)),
+    ]
+
     /// Maps IOUSBHost's timeout error to ``ScannerError/timedOut``.
     private static func perform(_ body: () throws -> Void) throws {
         do {
             try body()
-        } catch let error as NSError where error.domain == NSMachErrorDomain && error.code == Int(Int32(truncatingIfNeeded: kIOReturnTimeout)) {
+        } catch let error as NSError where Self.timeoutCodes.contains(error.code) {
             throw ScannerError.timedOut
         }
     }
