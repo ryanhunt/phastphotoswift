@@ -21,3 +21,6 @@ NOTES.local.md
 
 # Agent worktrees
 .claude/worktrees/
+
+# Harness signing (team and bundle ID of your own)
+Examples/PhastPhotoHarness/Config/Local.xcconfig

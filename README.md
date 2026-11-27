@@ -169,6 +169,37 @@ faster than Debug.
 Pass `--host <address>` (or set `PHASTPHOTO_HOST`) to skip Bonjour. `info` hides the serial number unless you
 pass `--show-serial`; `discover --all` lists every Bonjour scanner, not only FF-680Ws.
 
+### iOS test app
+
+[`Examples/PhastPhotoHarness`](Examples/PhastPhotoHarness) is a minimal SwiftUI app for running roadmap 1.1's
+device checks on a real iPhone or iPad, where the CLI can't go. It depends on this package by path and shows,
+with no polish: discovery and the local network permission outcome (including
+`DiscoveryError.localNetworkDenied`), `info` and `status`, a scan of the loaded stack (`RawSpool` →
+`PrintAssembler` → `PrintPipeline` with the real `VisionAnalyzer`), and each print's result: saved files, skip
+reasons, back text, rotation, duplicates, the cropped image, and the metadata read back from the file (IPTC
+beside XMP). The screen stays on while it scans or processes.
+
+1. Copy `Examples/PhastPhotoHarness/Config/Local.xcconfig.example` to `Local.xcconfig` (git-ignored) and set
+   your team and a throwaway bundle ID there. The committed project leaves the team unset: don't pick one in
+   Xcode's Signing pane, which edits the project.
+2. Open `Examples/PhastPhotoHarness/PhastPhotoHarness.xcodeproj` and run it on the device. The scheme runs a
+   **Release** build, because the imaging loops are about 200 times slower in Debug; the app shows which build it
+   is.
+3. Tap **Find scanners**: the first browse shows the local network prompt. Try allowing and refusing it (refusal
+   should show "local network access denied"; Settings > Privacy & Security > Local Network turns it back on).
+4. **Info**, **Status** (feeder empty, loaded, cover open), then **Scan the loaded stack** at 300 and 600 dpi.
+   **Stop after this print** stops cleanly; **Cancel now** is the hard cancel, to see whether it jams.
+5. Each print logs its time and peak memory (`phys_footprint`, sampled every 5 ms) to the screen and to
+   `timings.csv`. Raw scans, results, `timings.csv` and `harness-log.txt` are in the app's Documents folder:
+   open it in Files or copy it to a Mac from the device's Files tab in Finder, and reprocess raw scans there with
+   `phastphoto process` to compare Mac and device Vision results.
+
+**Process sample** runs the same spool-and-pipeline path on a synthetic print and back at the chosen resolution
+(two lines of "handwriting" for OCR, a slight tilt for the crop); **Same sample again** should be flagged as a
+duplicate. Use it in the simulator, where discovery finds nothing and Vision's face and scene results are fake
+(its OCR did read the sample's back on iOS 26.0), and on a device to measure processing without a scanner. After changing `project.yml` or adding a source file, run `xcodegen generate`
+there.
+
 ## Development
 
 ```bash
