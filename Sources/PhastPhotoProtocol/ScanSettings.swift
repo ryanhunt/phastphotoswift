@@ -83,12 +83,16 @@ public struct ScanSettings: Hashable, Sendable {
         case unsupportedResolution(Int)
         case jpegQualityOutOfRange(Int)
         case lengthOutOfRange(Double)
+        /// `length × dpi` exceeds 65535 lines: `#IMX` and the JPEG SOF height are 16-bit.
+        case scanTooLong(inches: Double, resolution: Int)
 
         public var description: String {
             switch self {
             case .unsupportedResolution(let dpi): "unsupported resolution \(dpi) dpi"
             case .jpegQualityOutOfRange(let q): "JPEG quality \(q) is outside 1–100"
             case .lengthOutOfRange(let l): "maximum length \(l) in is outside 2–240"
+            case .scanTooLong(let inches, let dpi):
+                "\(inches) in at \(dpi) dpi is \(Int(inches * Double(dpi))) lines; the most one page can have is \(ScanSettings.maximumLines)"
             }
         }
     }
@@ -97,6 +101,26 @@ public struct ScanSettings: Hashable, Sendable {
         guard Self.supportedResolutions.contains(resolution) else { throw ValidationError.unsupportedResolution(resolution) }
         guard (1 ... 100).contains(jpegQuality) else { throw ValidationError.jpegQualityOutOfRange(jpegQuality) }
         guard (2 ... 240).contains(maximumLengthInches) else { throw ValidationError.lengthOutOfRange(maximumLengthInches) }
+        guard Int(maximumLengthInches * Double(resolution)) <= Self.maximumLines else {
+            throw ValidationError.scanTooLong(inches: maximumLengthInches, resolution: resolution)
+        }
+    }
+
+    /// The most lines one page can have: `#IMX` and the JPEG SOF height are 16-bit.
+    public static let maximumLines = 65535
+
+    /// ffscan's app defaults (`app.py:43-52`): 300 dpi, colour, hardware deskew on, double-feed level 1,
+    /// JPEG quality 90, full 8.5 in width. Duplex, like ``SideMode/picture``.
+    public static var photoDefaults: ScanSettings {
+        ScanSettings(resolution: 300, colorMode: .color, duplex: true, hardwareDeskew: true,
+                     doubleFeedDetection: .level1, jpegQuality: 90, widthInches: 8.5)
+    }
+
+    /// These settings with `duplex` set for `mode` (`app.py:630`).
+    public func with(sideMode mode: SideMode) -> ScanSettings {
+        var copy = self
+        copy.duplex = mode.duplex
+        return copy
     }
 
     /// Scan width in pixels, clamped to the feeder's 2–8.5 in.
