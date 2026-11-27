@@ -47,4 +47,9 @@ import Testing
         #expect(BackText.humanText("Mom .1986") == "")
         #expect(BackText.humanText("Mom 1986.") == "")
     }
+
+    @Test func pythonWhitespaceSeparatesWords() {
+        // \x1f is whitespace to Python's `\s` but not a line break, so it separates words within a line
+        #expect(BackText.humanText("Dana\u{1F}Yoni") == "Dana\u{1F}Yoni")
+    }
 }

@@ -51,7 +51,8 @@ public enum BackText {
         "crystal", "archive", "professional", "photo", "print", "lustre", "glossy", "matte",
     ]
 
-    private static let tokenSeparator = regex(#"[\s,;:()\[\]•'"!?]+"#)
+    // Python `\s` also matches \x0b, \x1c-\x1f and \x85; ICU `\s` does not, so they are added explicitly.
+    private static let tokenSeparator = regex(#"[\s\x{0B}\x{1C}-\x{1F}\x{85},;:()\[\]•'"!?]+"#)
     private static let realWord = regex(#"\A[^\W\d_]{3,}\z"#)
     private static let standaloneYear = regex(#"(?<![\w.])(19[0-9]{2}|20[0-9]{2})(?![\w.])"#)
 

@@ -41,7 +41,10 @@ public enum FastFotoImport {
         var files: [String: URL] = [:]  // relative path without extension -> file
         try collect(folder, relative: "", into: &files)
 
-        let keys = files.keys.sorted { codePoints($0.lowercased()).lexicographicallyPrecedes(codePoints($1.lowercased())) }
+        let keys = files.keys.sorted {
+            let (a, b) = (codePoints($0.lowercased()), codePoints($1.lowercased()))
+            return a == b ? codePoints($0).lexicographicallyPrecedes(codePoints($1)) : a.lexicographicallyPrecedes(b)
+        }
         var out: [FastFotoPhoto] = []
         for key in keys {
             let (dir, name) = split(key)
