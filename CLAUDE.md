@@ -28,10 +28,16 @@ swift run phastphoto scan --dpi 300 --out scans
 
 | Path | Role |
 |---|---|
-| `Sources/PhastPhotoProtocol` | Pure wire formats, no I/O: `ISPacket`, `ScannerHello`, `ESCI2` tokens/parameters/commands/reply header, `ScanSettings`, `ScannerInfo`/`ScannerStatus`, `JPEGHeight` |
-| `Sources/PhastPhotoScanner` | `ScannerTransport` protocol, `NetworkTransport` (Network.framework), `ScannerDiscovery` (Bonjour), `ScannerSession` (actor: commands, scan loop) |
+| `Sources/PhastPhotoProtocol` | Pure wire formats, no I/O: `ISPacket`, `ScannerHello`, `ESCI2` tokens/parameters/commands/reply header, `ScanSettings` (+ `photoDefaults`, length limit), `SideMode`/`ScanSide`, `ScannerInfo`/`ScannerStatus` (+ friendly text), `JPEGHeight` |
+| `Sources/PhastPhotoScanner` | `ScannerTransport` protocol; `NetworkTransport` (Network.framework), `USBTransport` (macOS, IOUSBHost, behind a fakeable pipes protocol), `ScannerConnection` (pick a transport); `ScannerDiscovery` (Bonjour, FF-680W filter), `SubnetProbe`; `ScannerSession` (actor: serialised exchanges, model check, scan loop, graceful stop); `RawSpool`, `PrintAssembler`, `ScannerWatch` |
+| `Sources/PhastPhotoImaging` | No Vision. `RGBImage` (R,G,B bytes, stored orientation, ICC kept) and `JPEGWriting` (derived JPEGs keep metadata); crop: `PhotoBox` → `PhotoQuad` → `AutoCrop` (+ `CropSampling`); `InkFraction`; `BackText`; `Duplicates`/`DuplicateIndex` (Pillow-compatible Lanczos in `DuplicatesResample`); `Enhance`/`EnhancedCopy` (Pillow arithmetic by hand); `PhotoMetadata`, `PhotoOrientation` (lossless); `FastFotoImport` |
+| `Sources/PhastPhotoVision` | Apple Vision, depends on Imaging: `BackReader`, `BackPolicy`, `AutoRotation`, `EyeFinder`, `VisionSupport` (timeouts, `VisionWarmUp`). Pure decision functions are separate from Vision calls so they can be unit tested |
 | `Sources/phastphoto` | Developer CLI |
 | `Tests/PhastPhotoScannerTests/SimulatedScanner.swift` | In-memory ESC/I-2 scanner that enforces the reply rules; `ISTestServer` (loopback "IS" server) is in `NetworkTransportTests.swift` |
+
+Imaging code works on synthetic images in tests; per-pixel loops are ~200x slower in Debug, so keep test images
+small and hot loops on unsafe buffers. Do not tune crop, ink or duplicate thresholds without real scans
+(roadmap 1.2): they were measured upstream.
 
 ## Scanner facts that cost time to learn (from ffscan)
 

@@ -269,7 +269,7 @@ struct UnreachableTransport: ScannerTransport {
         let ff = scanner("EPSON FF-680W", model: "FF-680W")
         let other = scanner("EPSON ES-400", model: "ES-400")
         let noTXT = scanner("EPSON FF-680W", model: nil)
-        let notEpson = scanner("Brother", model: "DCP")
+        let notEpson = scanner("Example Printer", model: "MFP-100")
         let all = [ff, other, noTXT, notEpson]
         #expect(all.filter(ScannerDiscovery.ModelFilter.ff680w.matches) == [ff])
         #expect(all.filter(ScannerDiscovery.ModelFilter.epson.matches) == [ff, other, noTXT])

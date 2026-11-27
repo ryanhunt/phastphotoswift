@@ -18,3 +18,6 @@ scans/
 # Private notes
 NOTES.local.md
 .env
+
+# Agent worktrees
+.claude/worktrees/

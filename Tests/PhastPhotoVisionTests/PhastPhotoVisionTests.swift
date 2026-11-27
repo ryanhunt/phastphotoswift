@@ -216,3 +216,10 @@ import CoreText
     }
 }
 #endif
+
+@Suite struct EyeBridgeTests {
+    @Test func eyeMapsToRedEyeInput() {
+        let eye = Eye(x: 10.5, y: 20, radius: 4)
+        #expect(eye.position == EyePosition(x: 10.5, y: 20, radius: 4))
+    }
+}

@@ -57,3 +57,8 @@ public enum EyeFinder {
 
     private struct Fraction: Sendable { var x: Double, y: Double, radius: Double }
 }
+
+extension Eye {
+    /// This eye as the input red-eye removal takes (`RGBImage.removingRedEye` in PhastPhotoImaging).
+    public var position: EyePosition { EyePosition(x: x, y: y, radius: radius) }
+}

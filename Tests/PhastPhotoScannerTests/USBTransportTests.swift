@@ -160,9 +160,10 @@ private func transport(over pipes: FakePipes) -> USBTransport {
     }
 
     @Test func drivesAScannerSessionOverFakePipes() async throws {
-        // ScannerSession enters command mode through the transport: the ack comes back through the fake
+        // ScannerSession enters command mode through the transport: the ack comes back through the fake.
+        // The model check (INFO) is off: this test is only about entering command mode.
         let pipes = FakePipes(replies: [Data([0x06])])
-        let session = ScannerSession(transport: transport(over: pipes))
+        let session = ScannerSession(transport: transport(over: pipes), requiredModel: nil)
         try await session.open()
         #expect(await pipes.events == [.write(Data([0x1C, 0x58])), .read(1)])
     }

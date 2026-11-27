@@ -1,21 +1,26 @@
 # phastphotoswift
 
-Open-source Swift packages for the Epson FastFoto FF-680W photo scanner on iOS, iPadOS and macOS: Wi-Fi discovery and
-scanning now, with auto-crop, enhancement and duplicate detection to follow. It is a Swift port of
-[eg7eg7/ffscan](https://github.com/eg7eg7/ffscan) (Python, MIT), which worked out the scanner's network protocol.
+Open-source Swift packages for the Epson FastFoto FF-680W photo scanner on iOS, iPadOS and macOS: discovery and
+scanning over Wi-Fi (and USB on the Mac), then on-device processing of the scans: auto-crop and straighten,
+blank-back detection, reading the backs of prints, auto-rotation, duplicate detection, enhancement and photo
+metadata. It is a Swift port of [eg7eg7/ffscan](https://github.com/eg7eg7/ffscan) (Python, MIT), which worked
+out the scanner's network protocol.
 
 This is a library, not an app: it has no UI. Apps add it as a Swift package and build their own interface on top.
 
-> **Status: early.** The protocol and Wi-Fi client are ported and tested against a simulated scanner and a
-> loopback server, but have **not yet been run against real hardware**. The supported scanner is the
-> **FastFoto FF-680W**, the model the protocol was established on. See [docs/ROADMAP.md](docs/ROADMAP.md).
+> **Status: early.** Everything is tested against a simulated scanner, a loopback server and synthetic images,
+> but has **not yet been run against a real scanner**, and the Vision features have not been checked on real
+> photos. The supported scanner is the **FastFoto FF-680W**, the model the protocol was established on. See
+> [docs/ROADMAP.md](docs/ROADMAP.md) for what is verified.
 
 ## Packages
 
 | Product | What it does |
 |---|---|
 | `PhastPhotoProtocol` | Wire formats only, no I/O: "IS" packets, ESC/I-2 tokens and commands, `ScanSettings` → `PARA` block, `INFO`/`STAT` parsing, the JPEG height fix. |
-| `PhastPhotoScanner` | The client: Bonjour discovery (`ScannerDiscovery`), the Wi-Fi transport (`NetworkTransport`, Network.framework), and `ScannerSession` for queries and scans. |
+| `PhastPhotoScanner` | The client: discovery (`ScannerDiscovery` over Bonjour, `SubnetProbe` fallback), transports (`NetworkTransport` for Wi-Fi, `USBTransport` on macOS, `ScannerConnection.automatic()` to pick one), `ScannerSession` for queries and scans, `RawSpool` to write pages to disk as they arrive, `PrintAssembler` to pair each picture with its back, `ScannerWatch` to scan each stack as it is loaded. |
+| `PhastPhotoImaging` | Image processing, no Vision: `AutoCrop` (find, straighten and crop the print), `InkFraction` (blank backs), `BackText` (keep handwriting, drop lab codes; dates), `Duplicates`/`DuplicateIndex`, enhancement (`removingRedEye`, `restoredFaded`, `autoEnhanced`, `adjusted`, `RGBImage.enhancedCopy`), `PhotoMetadata` and `PhotoOrientation` (lossless), `FastFotoImport`. |
+| `PhastPhotoVision` | Apple Vision: `BackReader` (OCR of print backs), `BackPolicy` (which backs to keep), `AutoRotation` (faces, then scene), `EyeFinder` (for red-eye), `VisionWarmUp`. |
 | `phastphoto` | A small macOS command-line tool for checking the library against a real scanner. |
 
 Requires iOS 16 / macOS 13 or later and Swift 6.
@@ -35,7 +40,8 @@ targets: [
 
 - **iOS/iPadOS:** add to the app's Info.plist `NSLocalNetworkUsageDescription` (why you need the scanner) and
   `NSBonjourServices` containing `_scanner._tcp`. The first browse shows the permission prompt.
-- **macOS (sandboxed):** enable the `com.apple.security.network.client` entitlement.
+- **macOS (sandboxed):** enable the `com.apple.security.network.client` entitlement, and
+  `com.apple.security.device.usb` for USB.
 
 ## Usage
 
@@ -49,24 +55,51 @@ try await ScannerSession.withSession(transport: NetworkTransport(endpoint: scann
     let status = try await session.status()
     guard status.isReady else { print(status); return }       // "feeder empty", "paper jam", ...
 
-    let settings = ScanSettings(resolution: 600, duplex: true, jpegQuality: 95)
-    for try await page in session.pages(settings) {
-        // Prints load face up: side B is the picture, side A the back of the print.
-        let name = "\(page.index)\(page.side.rawValue).jpg"
-        try page.jpeg.write(to: folder.appending(path: name))
+    // ffscan's defaults (300 dpi, deskew, double-feed detection), both sides of each print
+    let settings = ScanSettings.photoDefaults.with(sideMode: .both)
+    // Each page is written to disk inside the scan loop, so whole JPEGs never pile up in memory.
+    for try await page in session.spooledPages(settings, to: RawSpool(directory: folder, mode: .both)) {
+        print(page.name, page.width, page.height)   // side B is the picture when prints load face up
     }
 }
 ```
 
+Processing a scanned picture (no scanner needed):
+
+```swift
+import PhastPhotoImaging
+import PhastPhotoVision
+
+let raw = try Data(contentsOf: url)
+let cropped = try AutoCrop.cropJPEG(raw)                              // straightened, backing removed
+let picture = try RGBImage.decode(cropped.jpeg)
+let rotation = await AutoRotation.rotation(of: picture)               // faces, then scene; .decided
+let eyes = try await EyeFinder.findEyes(in: picture).map(\.position)
+let enhanced = try RGBImage.enhancedCopy(of: cropped.jpeg, eyes: eyes)
+let metadata = PhotoMetadata(title: "Beach", date: "1974")
+let tagged = try PhotoMetadata.write(metadata, to: enhanced.data)     // lossless: no re-encode
+try PhotoOrientation.setRotation(rotation.degrees, in: tagged).write(to: outputURL)
+```
+
+The order ffscan uses for each print (back text, crop, blank-back check, duplicates, enhancement, rotation,
+metadata) is in [docs/ROADMAP.md](docs/ROADMAP.md); a type that wires it together is the next roadmap item.
+
 Things worth knowing (details in [docs/PROTOCOL.md](docs/PROTOCOL.md)):
 
-- **Hand pages off quickly.** The scanner stalls while your page handler runs; do cropping, writing and
-  uploads on another task.
+- **Hand pages off quickly.** The scanner stalls while a `scan(_:onPage:)` handler runs; do cropping and
+  uploads on another task. `pages(_:)` doesn't stall the scanner but keeps every page in memory until you read it
+  (~5.8 MB per 600 dpi side), so prefer `spooledPages(_:to:)`.
+- **One thing at a time.** A session runs one exchange at a time: queries during a scan throw `sessionBusy`.
+  `stopAfterCurrentPrint()` stops cleanly after the print that is feeding; `close()` cancels a running scan
+  (`CAN `) before `FIN `.
+- **Stay in the foreground on iOS.** A scan that stops polling mid-page jams the scanner, and an unreleased
+  session keeps it locked: keep the app active while scanning.
 - **One session per stack.** `withSession` always sends `FIN` and unlocks. A Wi-Fi session that is never
   released keeps the scanner locked until it is switched off and on.
 - **Sides.** Duplex scans send side A (facing down) then side B (facing up) for each print. A single-sided scan
   reads only side A, so load prints face down to get only the pictures, with about half the data.
-- **Pages are raw.** Each JPEG still includes the grey backing around the print; software crop is on the roadmap.
+- **Pages are raw.** Each JPEG still includes the grey backing around the print; crop it with `AutoCrop`.
+- **FF-680W only.** Discovery lists only FF-680W scanners by default, and `open()` checks the model in `INFO`.
 
 ### Command-line tool
 
@@ -79,10 +112,15 @@ swift run phastphoto status
 ```
 
 ```bash
-swift run phastphoto scan --dpi 600 --picture-only --out scans
+swift run phastphoto scan --dpi 600 --deskew --double-feed 1 --sides picture --out scans
 ```
 
-Pass `--host <address>` (or set `PHASTPHOTO_HOST`) to skip Bonjour.
+```bash
+swift run phastphoto scan --watch --out scans
+```
+
+Pass `--host <address>` (or set `PHASTPHOTO_HOST`) to skip Bonjour. `info` hides the serial number unless you
+pass `--show-serial`; `discover --all` lists every Bonjour scanner, not only FF-680Ws.
 
 ## Development
 
@@ -94,8 +132,10 @@ swift build && swift test
 xcodebuild -scheme PhastPhoto-Package -destination 'generic/platform=iOS Simulator' build
 ```
 
-The tests need no scanner: `SimulatedScanner` plays back the FF-680W's replies, and a loopback "IS" server
-exercises the Wi-Fi transport. Protocol fixtures are real scanner replies from ffscan with the serial replaced.
+The tests need no scanner: `SimulatedScanner` plays back the FF-680W's replies, a loopback "IS" server
+exercises the Wi-Fi transport and subnet probe, and fake pipes exercise USB framing. Imaging tests use synthetic
+images built in code (ffscan's own test scans, ported). Protocol fixtures are real scanner replies from ffscan
+with the serial replaced.
 
 ## Credits and licence
 

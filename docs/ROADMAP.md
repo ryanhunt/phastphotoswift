@@ -10,16 +10,30 @@ real scanner. **[Device]** = needs a real device or private real photos (the iOS
 no photos are committed). Port the code, not the docstrings: two upstream docstrings disagree with their code
 (`trim_backing` and `photo_quad` thresholds).
 
-## Done
+## Status
 
-- **Protocol** (`PhastPhotoProtocol`): "IS" packets, hello/holder parsing, ESC/I-2 token parser and parameter
-  encoder, commands and reply headers, `ScanSettings` → `PARA` (with `#BSZ` and the fallback without it),
-  `INFO`/`STAT` models, the JPEG SOF height fix. Ported from `ff680w.py` with its tests.
-- **Wi-Fi client** (`PhastPhotoScanner`): Bonjour discovery, `NetworkTransport` (IPv4 only, Nagle off,
-  per-exchange timeout), `ScannerSession` with `info`/`capabilities`/`status`/`scan` and a page stream.
-  Not yet safe against concurrent use: see 0.1.
-- **CLI** `phastphoto`: discover, info, capa, status, scan.
-- Not yet run against real hardware.
+Nothing has run against a real FF-680W yet: every **[HW]** item below is open, and **[Device]** code is written
+but checked only with injected inputs (plus Vision OCR of rendered text on macOS).
+
+| Area | Packets | Status |
+|---|---|---|
+| Protocol, Wi-Fi client, CLI (first port) | — | Done |
+| Session safety | 0.1–0.6 | Done: serialised exchanges, `sessionBusy`, graceful stop, FF-680W-only discovery with model check, settings limits and `photoDefaults`, `SideMode`, CLI flags, `RawSpool` |
+| Hardware check, raw corpus | 1.1, 1.2 | Open **[HW]** |
+| Crop and ink | 2.1–2.5 | Done (`RGBImage`, `PhotoBox`, `PhotoQuad`, `AutoCrop`, `InkFraction`) |
+| Crop on real scans | 2.6 | Open **[HW]** |
+| Back text, back policy, print assembly | 3.1, 3.3, 3.4 | Done (`BackText`, `BackPolicy`, `PrintAssembler`) |
+| Back OCR | 3.2 | Code done (`BackReader`); real handwriting unverified **[Device]** |
+| Orientation tag, metadata | 4.1, 4.4 | Done (`PhotoOrientation`, `PhotoMetadata`, lossless) |
+| Face roll, scene fallback | 4.2, 4.3 | Code done (`AutoRotation`); real photos unverified **[Device]** |
+| Duplicates | 5.1, 5.2 | Done (`Duplicates`, `DuplicateIndex`) |
+| Threshold on real rescans | 5.3 | Open **[HW]** |
+| Enhancement | 6.1, 6.3–6.5 | Done (`removingRedEye`, `restoredFaded`, `autoEnhanced`, `adjusted`, `enhancedCopy`) |
+| Eye finder | 6.2 | Code done (`EyeFinder`); real flash photos unverified **[Device]** |
+| Subnet probe, transport choice, watch | 7.1, 7.3, 7.4 | Done (`SubnetProbe`, `ScannerConnection`, `ScannerWatch`) |
+| USB on macOS | 7.2 | Code done (`USBTransport`, IOUSBHost); framing tested with fake pipes, never run on a scanner **[HW]** |
+| FastFoto import | 8.1 | Done (`FastFotoImport`) |
+| Per-print pipeline | 9.1 | Open: the parts exist, nothing wires them in the order below yet |
 
 ## Pipeline the packets add up to
 
@@ -280,6 +294,14 @@ any constant.
   `picture`, sources read only.
 - Tests: `test_ffscan.py:176-183`.
 
+## Phase 9: wiring
+
+**9.1 Per-print pipeline.** One type (in a module that depends on Imaging and Vision) that takes an
+`AssembledPrint` (or two raw files) and runs the order in "Pipeline the packets add up to": back text, side
+filter, crop, blank-back and fast-mode checks, duplicate check, enhanced copy, rotation, metadata. It maps
+`SideMode`/`ScanSide` onto `BackPolicy`'s own side enums and `Eye` onto `EyePosition` (`Eye.position`).
+Tests: synthetic prints through the whole chain with injected Vision results.
+
 ## Later (not understood, or needs hardware we don't have)
 
 - **Scan button** (interrupt endpoint `0x83` / `com.epson.EventManager`).
@@ -288,10 +310,22 @@ any constant.
 
 ## Known limitations
 
-- Subnet probe assumes a /24.
+- Subnet probe assumes a /24, and like ffscan accepts any device that sends an `IS` hello (the session's
+  `INFO` check then rejects a non-FF-680W).
 - Crop re-encodes the JPEG once (quality 95).
 - Red-eye is tested on synthetic eyes only.
 - The scene margin and the duplicate threshold were measured on ffscan's setup and need re-checking here.
+- Resampling is not bit-identical to Pillow everywhere: crop thumbnails use Core Graphics, and duplicate hashes
+  of JPEG files use an ImageIO reduced decode rather than Pillow's `draft` + `thumbnail` (the 9×8 Lanczos step
+  itself follows Pillow). Hashes may differ from ffscan's by a few bits; 5.3 re-checks the threshold.
+- `BackReader`'s winning rotation is not a reliable orientation signal (Vision reads rotated text at any
+  orientation); use it for text only.
+- Metadata lists with repeated items keep the first occurrence; exiftool's `-=`/`+=` sequence in ffscan may keep
+  the last.
+- `ScannerDiscovery.scanners()` ends with an error on any `NWBrowser` `.waiting` state, including a brief Wi-Fi
+  change; refused local network access is reported as `localNetworkDenied`.
+- A USB transfer already in flight is not aborted by task cancellation; it finishes or times out (60 s).
+- `photo_quad`'s "skip hits at index ≤ 2" rule is ported but no synthetic test can tell it apart.
 
 ## Out of scope
 
