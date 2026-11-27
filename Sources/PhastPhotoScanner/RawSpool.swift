@@ -14,6 +14,8 @@ public struct SpooledPage: Hashable, Sendable {
     public let url: URL
     /// The photo's name: ``RawSpool/pageName(prefix:number:side:)``.
     public let name: String
+    /// See ``ScannedPage/hardwareCropped``.
+    public var hardwareCropped: Bool = false
 }
 
 /// Writes each scanned side to a directory as it arrives, untouched, so the scan loop does nothing slower
@@ -66,7 +68,7 @@ public struct RawSpool: Sendable {
         }
         try page.jpeg.write(to: url, options: .atomic)
         return SpooledPage(index: page.index, side: side, width: page.width, height: page.height, stats: page.stats,
-                           byteCount: page.jpeg.count, url: url, name: name)
+                           byteCount: page.jpeg.count, url: url, name: name, hardwareCropped: page.hardwareCropped)
     }
 }
 

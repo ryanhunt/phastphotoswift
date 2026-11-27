@@ -1,0 +1,5 @@
+// Copy to Local.xcconfig (git-ignored) and fill in. Use a throwaway bundle ID: a Personal Team that signs an
+// identifier keeps it, and it can never move to a paid team.
+
+DEVELOPMENT_TEAM = ABCDE12345
+HARNESS_BUNDLE_ID = com.yourname.phastphoto-harness

@@ -283,6 +283,45 @@ final class FakeAnalyzer: PrintAnalyzer, @unchecked Sendable {
         #expect(other.picture?.saved?.duplicateOf == nil)
     }
 
+    /// The scanner already cut these sides to the paper (hardware crop): no software crop, neither of the saved
+    /// sides nor of the back read for writing, and the scans are saved as sent.
+    @Test func hardwareCroppedSidesAreNotCroppedAgain() async throws {
+        // "paper" filling the whole image, as a hardware-cropped scan arrives
+        let picture = try RGBImage(width: 200, height: 140) { x, y in
+            [RGB(200, 40, 40), RGB(40, 150, 60), RGB(30, 60, 190)][(x / 30 + y / 40) % 3]
+        }.jpegData(quality: 0.95)
+        let back = try RGBImage(width: 200, height: 140) { x, y in
+            x >= 40 && x < 160 && y >= 60 && y < 63 ? RGB(40, 40, 90) : Scans.paper
+        }.jpegData(quality: 0.95)
+        let analyzer = FakeAnalyzer(backText: "Mom 1986")
+        let result = try await PrintPipeline(settings: .init(duplicates: .off, autoRotate: false, metadata: PhotoMetadata()),
+                                             analyzer: analyzer)
+            .process(index: 0, mode: .both, picture: picture, back: back, hardwareCropped: true)
+        #expect(analyzer.calls.first == "readBack 200x140")
+        #expect(result.backText == "Mom 1986")
+        let savedPicture = try #require(result.picture?.saved)
+        let image = try RGBImage.decode(savedPicture.jpeg)
+        #expect(image.width == 200 && image.height == 140)
+        #expect(try #require(result.back?.saved).jpeg == back)  // no metadata, no crop: as sent
+
+        // the same scan without the flag is cropped (the box comes out smaller)
+        let cropped = try await PrintPipeline(settings: .init(duplicates: .off, autoRotate: false), analyzer: FakeAnalyzer())
+            .process(index: 0, mode: .fast, picture: Scans.picture(), back: nil)
+        let croppedImage = try RGBImage.decode(try #require(cropped.picture?.saved).jpeg)
+        #expect(croppedImage.width < 360)
+    }
+
+    /// From scanner pages the flag comes from the pages themselves.
+    @Test func assembledPrintsPassHardwareCropOn() async throws {
+        let analyzer = FakeAnalyzer()
+        var assembler = PrintAssembler(mode: .fast)
+        let page = ScannedPage(index: 0, side: .a, width: 360, height: 240, jpeg: try Scans.picture(), hardwareCropped: true)
+        let print = try #require(assembler.add(page).first)
+        let result = try await PrintPipeline(settings: .init(duplicates: .off, autoRotate: false), analyzer: analyzer).process(print)
+        let image = try RGBImage.decode(try #require(result.picture?.saved).jpeg)
+        #expect(image.width == 360 && image.height == 240)
+    }
+
     /// End to end from scanner pages: the assembler pairs A and B, the pipeline processes the print.
     @Test func assembledPrintsGoThroughThePipeline() async throws {
         var assembler = PrintAssembler(mode: .both)

@@ -187,7 +187,8 @@ final class ProcessingQueue: Sendable {
                     do {
                         let jpeg = try Data(contentsOf: spooled.url)  // read back: memory stays at one page
                         await folder.add(ScannedPage(index: spooled.index, side: side, width: spooled.width,
-                                                     height: spooled.height, jpeg: jpeg, stats: spooled.stats))
+                                                     height: spooled.height, jpeg: jpeg, stats: spooled.stats,
+                                                     hardwareCropped: spooled.hardwareCropped))
                     } catch {
                         await folder.recordFailure(describe(error))
                     }
@@ -351,14 +352,16 @@ struct RawScanFiles {
     }
 
     /// The pages ``PrintFolder`` takes for one print, sides as the scanner sends them in `mode`.
-    static func pages(of item: Print, index: Int, mode: SideMode) throws -> [ScannedPage] {
+    /// - Parameter hardwareCropped: the raws were scanned with hardware crop (the default), so they have no
+    ///   backing to crop in software.
+    static func pages(of item: Print, index: Int, mode: SideMode, hardwareCropped: Bool = true) throws -> [ScannedPage] {
         var pages: [ScannedPage] = []
-        if let back = item.back, let side = mode.backSide { pages.append(try page(back, index: index, side: side)) }
-        if let picture = item.picture, let side = mode.pictureSide { pages.append(try page(picture, index: index, side: side)) }
+        if let back = item.back, let side = mode.backSide { pages.append(try page(back, index: index, side: side, hardwareCropped: hardwareCropped)) }
+        if let picture = item.picture, let side = mode.pictureSide { pages.append(try page(picture, index: index, side: side, hardwareCropped: hardwareCropped)) }
         return pages
     }
 
-    private static func page(_ url: URL, index: Int, side: ScanSide) throws -> ScannedPage {
+    private static func page(_ url: URL, index: Int, side: ScanSide, hardwareCropped: Bool) throws -> ScannedPage {
         let data = try Data(contentsOf: url)
         var width = 0, height = 0
         if let source = CGImageSourceCreateWithData(data as CFData, nil),
@@ -366,6 +369,7 @@ struct RawScanFiles {
             width = properties[kCGImagePropertyPixelWidth] as? Int ?? 0
             height = properties[kCGImagePropertyPixelHeight] as? Int ?? 0
         }
-        return ScannedPage(index: index, side: side, width: width, height: height, jpeg: data)
+        return ScannedPage(index: index, side: side, width: width, height: height, jpeg: data,
+                           hardwareCropped: hardwareCropped)
     }
 }

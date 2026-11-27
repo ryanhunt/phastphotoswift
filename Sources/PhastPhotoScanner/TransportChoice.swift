@@ -4,9 +4,10 @@ import PhastPhotoProtocol
 
 /// How to reach the scanner.
 public enum TransportChoice: Sendable, Hashable {
-    /// USB if a scanner is plugged in (macOS only), else Bonjour, else a probe of the local /24.
+    /// USB if a scanner is plugged in (macOS, or an M-series iPad with the driver enabled), else Bonjour, else a
+    /// probe of the local /24.
     case automatic
-    /// USB only (macOS). Fails with a clear message if nothing is plugged in.
+    /// USB only (macOS, or iPadOS through the driver extension). Fails with a clear message if nothing is plugged in.
     case usb
     /// Wi-Fi to this address (or Bonjour host name), skipping discovery.
     case wifi(host: String)
@@ -44,7 +45,7 @@ public enum ScannerConnection {
         /// The real USB bus, Bonjour (3 s) and the local /24.
         public static let live = Probes(
             usbPresent: {
-                #if os(macOS)
+                #if os(macOS) || os(iOS)
                 USBTransport.isScannerPresent()
                 #else
                 false
@@ -55,7 +56,8 @@ public enum ScannerConnection {
         )
     }
 
-    public static let noUSBMessage = "No scanner on USB: is the cable plugged in? (USB needs a Mac.)"
+    public static let noUSBMessage = "No scanner on USB: is the cable plugged in? (USB needs a Mac, or an iPad with an "
+        + "M-series chip and the scanner driver enabled in Settings > General > Drivers.)"
     public static let noScannerMessage = "No Epson scanner found on the network; is it on and on the same Wi-Fi?"
 
     /// Decide how to reach the scanner. Nothing is connected yet.
@@ -88,7 +90,7 @@ public enum ScannerConnection {
     static func make(_ route: Route) throws -> any ScannerTransport {
         switch route {
         case .usb:
-            #if os(macOS)
+            #if os(macOS) || os(iOS)
             return USBTransport()
             #else
             throw ScannerError.connectionFailed(noUSBMessage)

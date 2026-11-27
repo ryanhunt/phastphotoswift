@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Empty on purpose: iPadOS shows the app's Drivers switch in Settings only when the app has a Settings bundle. -->
+	<key>PreferenceSpecifiers</key>
+	<array>
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>Title</key>
+			<string>USB driver</string>
+			<key>FooterText</key>
+			<string>Turn on the driver under Drivers to use the scanner over USB.</string>
+		</dict>
+	</array>
+</dict>
+</plist>

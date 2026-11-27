@@ -1,0 +1,9 @@
+// Signing for the harness. The team is deliberately unset: copy Local.xcconfig.example to Local.xcconfig
+// (git-ignored) and put your team and a bundle ID of your own there, rather than picking a team in Xcode's
+// Signing pane (that edits the committed project).
+
+DEVELOPMENT_TEAM =
+HARNESS_BUNDLE_ID = com.example.phastphoto-harness
+
+
+#include? "Local.xcconfig"

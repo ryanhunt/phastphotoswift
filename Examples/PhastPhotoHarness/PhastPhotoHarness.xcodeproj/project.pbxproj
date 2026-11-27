@@ -1,0 +1,405 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0019323062B582A997DBBEB7 /* PhastPhotoVision in Frameworks */ = {isa = PBXBuildFile; productRef = 8F9C9B4B3408568358BB68E9 /* PhastPhotoVision */; };
+		3417104F5B9A9C5DA857D77A /* MemoryMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC12800A05FE30E3356BED4 /* MemoryMeter.swift */; };
+		410554DAF098298C71936B47 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA59CC4694B19A922B5AEFAD /* ContentView.swift */; };
+		492897B01A6E31A540DD38D6 /* SampleScans.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580D1240EE0235A2252A4244 /* SampleScans.swift */; };
+		5F9D62A4DF29CDA3CD7AFD49 /* HarnessApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9140961206F95C3063201972 /* HarnessApp.swift */; };
+		63EE68D997791F3FB85E4A02 /* PhastPhotoPipeline in Frameworks */ = {isa = PBXBuildFile; productRef = 8B1707DEBB868F9A35F6C5BE /* PhastPhotoPipeline */; };
+		8727AD3EBD8E8B1B1D3282EB /* PrintDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4954180F7D416257B0085701 /* PrintDetailView.swift */; };
+		95A03D9AE18F3F12D22B6012 /* PhastPhotoImaging in Frameworks */ = {isa = PBXBuildFile; productRef = 71CE3C0C1A04BBFD3744596A /* PhastPhotoImaging */; };
+		C51872564CAD2BE9B26A65C1 /* PhastPhotoScanner in Frameworks */ = {isa = PBXBuildFile; productRef = 994E993418E93D578D10FF8F /* PhastPhotoScanner */; };
+		CCA9D20DF37059BC6B209575 /* PhastPhotoProtocol in Frameworks */ = {isa = PBXBuildFile; productRef = 27E6395EACAE47C53EF8B87A /* PhastPhotoProtocol */; };
+		D6E0239B71829A050A6089A7 /* HarnessModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 313F284C37D5D2283440C00F /* HarnessModel.swift */; };
+		E1F20C110D6D5ABF28A13BEC /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3168F896D7E1D5CAB5C9EDC /* Storage.swift */; };
+		FEF326829511B5E7F7D60BFB /* PrintProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DCDBEC65C836ACAEB0E45E3 /* PrintProcessor.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		313F284C37D5D2283440C00F /* HarnessModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessModel.swift; sourceTree = "<group>"; };
+		4954180F7D416257B0085701 /* PrintDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintDetailView.swift; sourceTree = "<group>"; };
+		580D1240EE0235A2252A4244 /* SampleScans.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleScans.swift; sourceTree = "<group>"; };
+		6DCDBEC65C836ACAEB0E45E3 /* PrintProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintProcessor.swift; sourceTree = "<group>"; };
+		7CCE6C99765936DAE0AC652A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		9140961206F95C3063201972 /* HarnessApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessApp.swift; sourceTree = "<group>"; };
+		96FEA3FBB36B4864D8A9902C /* serene-wilson-5bac43 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "serene-wilson-5bac43"; path = ../..; sourceTree = SOURCE_ROOT; };
+		A3168F896D7E1D5CAB5C9EDC /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
+		D7E81C4C881E49EE05706F6F /* Harness.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Harness.xcconfig; sourceTree = "<group>"; };
+		EDC12800A05FE30E3356BED4 /* MemoryMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryMeter.swift; sourceTree = "<group>"; };
+		F3FE87ED968BA7212AA6BFFC /* PhastPhotoHarness.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PhastPhotoHarness.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FA59CC4694B19A922B5AEFAD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C9450B76C737166CA0D6A6A3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C51872564CAD2BE9B26A65C1 /* PhastPhotoScanner in Frameworks */,
+				95A03D9AE18F3F12D22B6012 /* PhastPhotoImaging in Frameworks */,
+				0019323062B582A997DBBEB7 /* PhastPhotoVision in Frameworks */,
+				63EE68D997791F3FB85E4A02 /* PhastPhotoPipeline in Frameworks */,
+				CCA9D20DF37059BC6B209575 /* PhastPhotoProtocol in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		62F55EAAFB927A42C506BC4A /* PhastPhotoHarness */ = {
+			isa = PBXGroup;
+			children = (
+				FA59CC4694B19A922B5AEFAD /* ContentView.swift */,
+				9140961206F95C3063201972 /* HarnessApp.swift */,
+				313F284C37D5D2283440C00F /* HarnessModel.swift */,
+				7CCE6C99765936DAE0AC652A /* Info.plist */,
+				EDC12800A05FE30E3356BED4 /* MemoryMeter.swift */,
+				4954180F7D416257B0085701 /* PrintDetailView.swift */,
+				6DCDBEC65C836ACAEB0E45E3 /* PrintProcessor.swift */,
+				580D1240EE0235A2252A4244 /* SampleScans.swift */,
+				A3168F896D7E1D5CAB5C9EDC /* Storage.swift */,
+			);
+			path = PhastPhotoHarness;
+			sourceTree = "<group>";
+		};
+		952C72296A035BBF66CC81B5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F3FE87ED968BA7212AA6BFFC /* PhastPhotoHarness.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B1F18F2D596B7859A01DA146 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				D7E81C4C881E49EE05706F6F /* Harness.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		C2DA40268E1430F7293A5DB0 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				96FEA3FBB36B4864D8A9902C /* serene-wilson-5bac43 */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		FB5FB5B16FB657EB1D264BF1 = {
+			isa = PBXGroup;
+			children = (
+				B1F18F2D596B7859A01DA146 /* Config */,
+				C2DA40268E1430F7293A5DB0 /* Packages */,
+				62F55EAAFB927A42C506BC4A /* PhastPhotoHarness */,
+				952C72296A035BBF66CC81B5 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2A6724E2CAD6E3C31C7746DF /* PhastPhotoHarness */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 55F628974660BC6EE238EDFE /* Build configuration list for PBXNativeTarget "PhastPhotoHarness" */;
+			buildPhases = (
+				2A227300F214DF870DA914A9 /* Sources */,
+				C9450B76C737166CA0D6A6A3 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PhastPhotoHarness;
+			packageProductDependencies = (
+				994E993418E93D578D10FF8F /* PhastPhotoScanner */,
+				71CE3C0C1A04BBFD3744596A /* PhastPhotoImaging */,
+				8F9C9B4B3408568358BB68E9 /* PhastPhotoVision */,
+				8B1707DEBB868F9A35F6C5BE /* PhastPhotoPipeline */,
+				27E6395EACAE47C53EF8B87A /* PhastPhotoProtocol */,
+			);
+			productName = PhastPhotoHarness;
+			productReference = F3FE87ED968BA7212AA6BFFC /* PhastPhotoHarness.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		158D8CC3F419CC83C16E4F39 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					2A6724E2CAD6E3C31C7746DF = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = EA3F22B91176A022F4693443 /* Build configuration list for PBXProject "PhastPhotoHarness" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = FB5FB5B16FB657EB1D264BF1;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				6BC5C5D7F6BB3FB59EA613E0 /* XCLocalSwiftPackageReference "../.." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 952C72296A035BBF66CC81B5 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				2A6724E2CAD6E3C31C7746DF /* PhastPhotoHarness */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2A227300F214DF870DA914A9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				410554DAF098298C71936B47 /* ContentView.swift in Sources */,
+				5F9D62A4DF29CDA3CD7AFD49 /* HarnessApp.swift in Sources */,
+				D6E0239B71829A050A6089A7 /* HarnessModel.swift in Sources */,
+				3417104F5B9A9C5DA857D77A /* MemoryMeter.swift in Sources */,
+				8727AD3EBD8E8B1B1D3282EB /* PrintDetailView.swift in Sources */,
+				FEF326829511B5E7F7D60BFB /* PrintProcessor.swift in Sources */,
+				492897B01A6E31A540DD38D6 /* SampleScans.swift in Sources */,
+				E1F20C110D6D5ABF28A13BEC /* Storage.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1CD165E07D6E5A74236B1731 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		3B548D1FE2559138B171161A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		9E139E77E9FB0A1FE7273E42 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D7E81C4C881E49EE05706F6F /* Harness.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PhastPhotoHarness/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(HARNESS_BUNDLE_ID)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C02759987E8D0ABC07111721 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D7E81C4C881E49EE05706F6F /* Harness.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PhastPhotoHarness/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(HARNESS_BUNDLE_ID)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		55F628974660BC6EE238EDFE /* Build configuration list for PBXNativeTarget "PhastPhotoHarness" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9E139E77E9FB0A1FE7273E42 /* Debug */,
+				C02759987E8D0ABC07111721 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		EA3F22B91176A022F4693443 /* Build configuration list for PBXProject "PhastPhotoHarness" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1CD165E07D6E5A74236B1731 /* Debug */,
+				3B548D1FE2559138B171161A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		6BC5C5D7F6BB3FB59EA613E0 /* XCLocalSwiftPackageReference "../.." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		27E6395EACAE47C53EF8B87A /* PhastPhotoProtocol */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PhastPhotoProtocol;
+		};
+		71CE3C0C1A04BBFD3744596A /* PhastPhotoImaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PhastPhotoImaging;
+		};
+		8B1707DEBB868F9A35F6C5BE /* PhastPhotoPipeline */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PhastPhotoPipeline;
+		};
+		8F9C9B4B3408568358BB68E9 /* PhastPhotoVision */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PhastPhotoVision;
+		};
+		994E993418E93D578D10FF8F /* PhastPhotoScanner */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PhastPhotoScanner;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 158D8CC3F419CC83C16E4F39 /* Project object */;
+}

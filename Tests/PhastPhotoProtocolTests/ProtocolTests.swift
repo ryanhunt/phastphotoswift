@@ -78,12 +78,12 @@ import Testing
     }
 
     @Test func documentedScanParameters() {
-        // docs/PROTOCOL.md §3, without SKEW and DFL1
+        // docs/PROTOCOL.md §3, without SKEW and DFL1, and without hardware crop (ffscan's flags)
         let expected = "#ADFDPLXPEDT#COLC024#FMTJPG #JPGd090#GMMUG18"
             + "#RSMi0000300#RSSi0000300#ACQi0000000i0000000i0002550i0010800#BSZi1048576"
-        #expect(String(decoding: ScanSettings().parameterBlock(), as: UTF8.self) == expected)
+        #expect(String(decoding: ScanSettings(hardwareCrop: false).parameterBlock(), as: UTF8.self) == expected)
 
-        var settings = ScanSettings(hardwareDeskew: true, doubleFeedDetection: .level1)
+        var settings = ScanSettings(hardwareDeskew: true, doubleFeedDetection: .level1, hardwareCrop: false)
         #expect(String(decoding: settings.parameterBlock(), as: UTF8.self).hasPrefix("#ADFDPLXPEDTSKEWDFL1#COL"))
         settings.blockSize = nil
         #expect(!String(decoding: settings.parameterBlock(), as: UTF8.self).contains("#BSZ"))
@@ -94,7 +94,17 @@ import Testing
         let settings = ScanSettings(resolution: 600, duplex: false, widthInches: 6.5)
         let acq = ESCI2Fields(parsing: settings.parameterBlock())["ACQ"]
         #expect(acq == [[.integer(600), .integer(0), .integer(3900), .integer(21600)]])
-        #expect(settings.feederFlags == "PEDT")
+        #expect(settings.feederFlags == "CRP PEDT")
+    }
+
+    /// Hardware crop is on by default, in SANE epsonds' order (sane-backends MR 919): on FF-680W firmware 18.60
+    /// paper-end detection works only with it (27 Nov 2026: 36 in pages without it, the paper's size with it).
+    @Test func hardwareCropGoesWithPaperEnd() {
+        #expect(ScanSettings().hardwareCrop)
+        #expect(String(decoding: ScanSettings().parameterBlock(), as: UTF8.self).hasPrefix("#ADFDPLXCRP PEDT#COLC024"))
+        let all = ScanSettings(hardwareDeskew: true, doubleFeedDetection: .level3)
+        #expect(all.feederFlags == "DPLXSKEWCRP PEDTDFL3")
+        #expect(ScanSettings(duplex: false, hardwareCrop: false).feederFlags == "PEDT")
     }
 
     @Test func acquisitionWidthIsClamped() {
