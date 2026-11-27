@@ -183,6 +183,20 @@ private func names(in folder: URL) -> [String] {
         }
     }
 
+    /// Raws from a default scan are hardware-cropped: `process` passes that on unless told to crop in software.
+    @Test func rawPagesAreHardwareCroppedByDefault() throws {
+        let out = try temporaryFolder()
+        defer { try? FileManager.default.removeItem(at: out) }
+        let url = out.appending(path: "20261127-101500_scan_001.jpg")
+        try Scans.picture().write(to: url)
+        let item = RawScanFiles.Print(picture: url, back: nil)
+        #expect(try RawScanFiles.pages(of: item, index: 0, mode: .fast).map(\.hardwareCropped) == [true])
+        #expect(try RawScanFiles.pages(of: item, index: 0, mode: .fast, hardwareCropped: false).map(\.hardwareCropped) == [false])
+        let spooled = try RawSpool(directory: out, mode: .fast, stamp: "S")
+            .write(ScannedPage(index: 0, side: .a, width: 0, height: 0, jpeg: Data("x".utf8), hardwareCropped: true))
+        #expect(spooled.hardwareCropped)
+    }
+
     /// Fast mode's raw picture (relabelled B in its name) goes back to the pipeline as side A, as the scanner sent it.
     @Test func fastRawPicturesAreSideA() throws {
         let out = try temporaryFolder()

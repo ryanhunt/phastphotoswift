@@ -108,11 +108,10 @@ iPad Pro 12.9-inch (5th generation, M1), iPadOS 27.2.1, development-signed, scan
 (`kIOReturnTimeout` and `kIOUSBTransactionTimeout` are both treated as one), a USB reset (the app should
 reconnect within 10 s), unplugging mid-scan, and whether a 60 s blocking transfer upsets DriverKit.
 
-**The scanner, not USB:** every scan of this scanner so far came back 36 inches long (2550 × 10800 px, the
-`#ACQ` maximum), one print followed by backing, although `PEDT` (stop at the end of the paper) is set. This
-happened over USB and over Wi-Fi, and also with ffscan's own Python code, which got `#pen` 2550 × 10800 too.
-So it is how this scanner (firmware 18.60.SP14P2) handles these settings, not this driver or the library.
-Roadmap 1.1 tracks it.
+**36 in pages (fixed, not USB):** these scans came back 36 inches long (2550 × 10800 px, the `#ACQ` maximum),
+one print followed by backing, over USB and Wi-Fi alike, and with ffscan's own code. On this firmware
+(18.60.SP14P2) `PEDT` only works together with hardware crop (`CRP `), which `ScanSettings` now sends by
+default: see docs/PROTOCOL.md.
 
 ## Test app
 

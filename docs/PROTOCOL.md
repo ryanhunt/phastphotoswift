@@ -156,6 +156,12 @@ full 8.5″ width, with the height as the longest photo you expect.
   resolution, colour and quality.
 - **Hardware crop** (`CRP `) is accepted but has no visible effect. ffscan crops in software, as Epson's
   own software does (`ESSWAutoSize` in its model file).
+  *phastphotoswift, 27 Nov 2026, firmware 18.60.SP14P2:* not on this firmware. There `PEDT` alone is ignored, so
+  every page runs to the full `#ACQ` height (`#pen` echoes it back) and a stack stops after the first print.
+  `#ADF…CRP PEDT…` makes the scanner stop at the paper's end and cut each side to the paper, in both directions:
+  an A4 print came back 2490 × 3524 at 300 dpi, and two 80 mm receipts 938 px wide, one per page. SANE's epsonds
+  backend found the same on the FF-680W (sane-backends MR 919). ffscan's own code gave 2550 × 10800 on this
+  scanner. With `CRP ` there is no backing left around the print to crop in software.
 - **Photos added mid-scan:** a print added after `#lftd000` isn't fed; start a new `TRDT`.
 - **The 300 dpi edge strip.** The outermost columns of a 300 dpi scan differ from the grey backing; sample
   the background colour slightly inward when cropping.

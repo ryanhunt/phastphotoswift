@@ -58,7 +58,10 @@ small and hot loops on unsafe buffers. Do not tune crop, ink or duplicate thresh
 - Send `#BSZ` (1 MiB): without it every 64 KB block costs two Wi-Fi round trips.
 - Prefer IPv4: Bonjour names also resolve to IPv6 link-local, and an IPv6 session once left an invisible lock.
 - USB: same commands as raw bulk transfers, no lock; header and parameter block must be **separate** writes.
-- Hardware crop (`CRP `) is a no-op; crop in software.
+- Paper-end detection (`PEDT`) needs hardware crop (`CRP `) on firmware 18.60: without it every page is the full
+  `#ACQ` height (36 in) and a stack stops after one print. `ScanSettings.hardwareCrop` is on by default; its pages
+  (`ScannedPage.hardwareCropped`) have no backing, so the pipeline must not crop them in software. (ffscan, on
+  newer firmware, found `CRP ` a no-op and never sends it.)
 
 ## Conventions
 

@@ -23,7 +23,7 @@ import Testing
         #expect(d.hardwareDeskew && d.doubleFeedDetection == .level1)
         #expect(d.jpegQuality == 90 && d.widthInches == 8.5 && d.duplex)
         try d.validate()
-        #expect(d.feederFlags == "DPLXPEDTSKEWDFL1")
+        #expect(d.feederFlags == "DPLXSKEWCRP PEDTDFL1")  // ffscan's flags plus hardware crop
     }
 
     @Test func sideModeSetsDuplex() {

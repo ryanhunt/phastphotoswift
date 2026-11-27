@@ -95,7 +95,11 @@ All pixel work is in stored orientation: never apply EXIF orientation before cro
 
 ## Phase 1: hardware check [HW]
 
-**1.1 Checklist with a real FF-680W**, using 0.5's CLI (with `--process`, 9.2, to see crops and back text):
+**1.1 Checklist with a real FF-680W**, using 0.5's CLI (with `--process`, 9.2, to see crops and back text).
+*Paper end, found 27 Nov 2026 (firmware 18.60.SP14P2):* `PEDT` only works together with `CRP `. Hardware crop is now
+on by default, and those pages skip software crop (PROTOCOL.md, "Things that are easy to get wrong"). Still to
+check: software straightening of hardware-cropped prints that come through slightly tilted; `--no-hardware-crop`
+on newer firmware.
 - `status` with feeder empty, loaded, cover open.
 - Duplex scans at 300 and 600 dpi with deskew + DFL1.
 - Single-sided, face down.
@@ -113,11 +117,10 @@ All pixel work is in stored orientation: never apply EXIF orientation before cro
 - Whether raw JPEGs carry ICC, JFIF density or EXIF.
 
 **First hardware results (27 November 2026, firmware 18.60.SP14P2):** `INFO` and `STATUS` work over Wi-Fi and
-USB; single-sided and duplex scans complete. Every scan returned pages 36 in long (`#pen` 2550 × 10800 at
-300 dpi, the `#ACQ` maximum), one print followed by backing, with `PEDT` set. That happened over USB, over Wi-Fi,
-and with ffscan's own code, so it is scanner-side. In a duplex scan of two prints, only the first came back.
-Next: try a shorter `#ACQ` length, a stack of prints, and the paper-end flag variants, and compare with Epson's
-own software on this firmware.
+USB; single-sided and duplex scans complete. With `PEDT` alone every page was 36 in long (`#pen` 2550 × 10800
+at 300 dpi, the `#ACQ` maximum) and a stack stopped after its first print, over USB, over Wi-Fi and with
+ffscan's own code. Fixed by sending `CRP ` with `PEDT` (above): an A4 print came back 8.3 × 11.75 in, and two
+receipts one page each.
 
 **1.2 Private raw corpus** (git-ignored `scans/`), for phases 2–6:
 - 300 and 600 dpi, deskew on and off;
@@ -308,7 +311,7 @@ any constant.
   the write buffer is now `InOut`, and reads go straight into the app's buffer. Not yet tried: 600 dpi, a stack
   of prints, timeouts, reset, unplugging. The driver's README has the details. Distribution needs Apple's DriverKit grant
   for Epson's vendor ID.
-- *Not USB:* see 1.1 for the 36 in pages.
+- *Not USB:* the 36 in pages were the paper-end setting (1.1), fixed by hardware crop.
 
 ## Phase 8: import
 

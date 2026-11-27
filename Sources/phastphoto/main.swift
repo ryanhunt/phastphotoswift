@@ -19,9 +19,11 @@ import PhastPhotoScanner
 let usage = """
     usage: phastphoto [--host HOST] discover [--all] | info [--show-serial] | capa | status
            phastphoto [--host HOST] scan [--dpi N] [--gray] [--quality N] [--deskew] [--double-feed 1|3]
-                                         [--width INCHES] [--sides picture|both|back|fast] [--watch] [--out DIR]
+                                         [--width INCHES] [--length INCHES] [--no-hardware-crop]
+                                         [--sides picture|both|back|fast] [--watch] [--out DIR]
                                          [--process [PIPELINE OPTIONS]]
-           phastphoto process [--sides picture|both|back|fast] [--out DIR] [PIPELINE OPTIONS] RAW-FILE-OR-FOLDER...
+           phastphoto process [--sides picture|both|back|fast] [--out DIR] [--software-crop] [PIPELINE OPTIONS]
+                              RAW-FILE-OR-FOLDER...
            (--single-sided = --sides fast, --picture-only = --sides picture; default --sides both)
 
     pipeline options: [--no-crop] [--keep-blank-backs] [--duplicates flag|skip|off] [--enhance] [--no-rotate]
@@ -64,6 +66,12 @@ struct Target: Sendable {
 func resolve(host: String?) async throws -> Target {
     if let host { return Target(host: host, scanner: nil) }
     guard let scanner = try await ScannerDiscovery.firstScanner() else {
+        // a scanner that just woke up can take a while to advertise again: try the local /24 directly
+        print("not found with Bonjour; probing the local network...")
+        if let host = await SubnetProbe.scanLocalSubnet() {
+            print("found a scanner by probing")
+            return Target(host: host, scanner: nil)
+        }
         throw UsageError(description: "no FF-680W found on the network; is it on and on the same Wi-Fi? (or pass --host)")
     }
     print("found \(scanner.name)")
@@ -181,6 +189,10 @@ func describe(_ page: SpooledPage) -> String {
             guard let inches = Double(width) else { throw UsageError(description: "--width needs a number of inches") }
             settings.widthInches = inches
         }
+        if let length = try option("--length") {
+            guard let inches = Double(length) else { throw UsageError(description: "--length needs a number of inches") }
+            settings.maximumLengthInches = inches
+        }
         if let feed = try option("--double-feed") {
             switch feed {
             case "1": settings.doubleFeedDetection = .level1
@@ -190,6 +202,7 @@ func describe(_ page: SpooledPage) -> String {
         }
         if flag("--gray") { settings.colorMode = .gray }
         if flag("--deskew") { settings.hardwareDeskew = true }
+        if flag("--no-hardware-crop") { settings.hardwareCrop = false }
         let mode = try sideMode(default: .both)
         settings = settings.with(sideMode: mode)
         let watch = flag("--watch")
@@ -277,6 +290,9 @@ func describe(_ page: SpooledPage) -> String {
 
     case "process":
         let mode = try sideMode(default: .both)
+        // Raws from scans with hardware crop (the default) are already cut to the paper. Older raws, or scans with
+        // --no-hardware-crop, still have the backing: crop those in software.
+        let softwareCrop = flag("--software-crop")
         let out = URL(filePath: try option("--out") ?? "processed", directoryHint: .isDirectory)
         let settings = try pipelineSettings()
         if let unknown = arguments.first(where: { $0.hasPrefix("--") }) {
@@ -291,7 +307,9 @@ func describe(_ page: SpooledPage) -> String {
         let folder = PrintFolder(directory: out, mode: mode, settings: settings, stamp: RawSpool(directory: out).stamp)
         for (index, item) in prints.enumerated() {
             do {
-                for page in try RawScanFiles.pages(of: item, index: index, mode: mode) { await folder.add(page) }
+                for page in try RawScanFiles.pages(of: item, index: index, mode: mode, hardwareCropped: !softwareCrop) {
+                    await folder.add(page)
+                }
             } catch {
                 await folder.recordFailure(describe(error))
             }
