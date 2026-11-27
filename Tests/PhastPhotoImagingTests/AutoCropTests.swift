@@ -29,6 +29,20 @@ import Testing
         #expect(abs(quad.ul.y) < 2 && abs(quad.ur.y) < 2)
     }
 
+    /// Picture that looks like the backing (here the top 60% of the print's left 14 px) is counted as photo by the
+    /// coarse box. Those rows put the edge far inside it (> 1.5% of the longer side), so they are dropped; without
+    /// that, more than half the points put the edge 14 px (within the 3% search window) too far in (ffscan `photo_quad`, `inside_tol`).
+    @Test func backingColouredPictureDoesNotMoveTheEdge() throws {
+        let image = RGBImage(width: 600, height: 400) { x, y in
+            guard x >= 100, x < 500, y >= 50, y < 350 else { return CropTestScans.grey }
+            if x < 114, y < 230 { return CropTestScans.grey }
+            return RGB(UInt8(150 + (x / 20) % 3 * 30), 60, 40)
+        }
+        let quad = try #require(fit(image))
+        #expect(abs(quad.ul.x - 100) < 2 && abs(quad.ll.x - 100) < 2, "\(quad)")
+        #expect(abs(quad.ur.x - 500) < 2 && abs(quad.lr.y - 350) < 2)
+    }
+
     @Test func plainBackingHasNoQuad() {
         #expect(fit(RGBImage(width: 200, height: 150, fill: CropTestScans.grey)) == nil)
     }
