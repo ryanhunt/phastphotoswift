@@ -26,8 +26,11 @@ final class ISTestServer: Sendable {
     var packetTypes: [ISPacketType] { received.withLock { $0 } }
 
     func start() async throws -> UInt16 {
-        listener.newConnectionHandler = { [self] conn in
+        listener.newConnectionHandler = { [self, hello] conn in
             conn.start(queue: queue)
+            // The hello goes out from the listener's queue, as a scanner sends it at once: a Task would wait for
+            // a free cooperative thread, which on a busy CI runner took longer than the probe's 300 ms read window.
+            conn.send(content: ISPacket(type: .hello, payload: hello).encoded, completion: .idempotent)
             Task { await self.serve(conn) }
         }
         return try await withCheckedThrowingContinuation { continuation in
@@ -48,7 +51,6 @@ final class ISTestServer: Sendable {
     private func serve(_ conn: NWConnection) async {
         defer { conn.cancel() }
         do {
-            try await NetworkTransport.send(ISPacket(type: .hello, payload: hello), on: conn)
             while true {
                 let packet = try await NetworkTransport.receivePacket(conn)
                 received.withLock { $0.append(packet.type) }
@@ -123,4 +125,73 @@ final class ISTestServer: Sendable {
         let transport = NetworkTransport(host: "127.0.0.1", port: port, timeout: .seconds(5))
         await #expect(throws: ScannerError.self) { try await transport.open() }
     }
+
+    /// A connection reset before the hello is a failed connection, not a raw `NWError`. (The iOS 26 simulator on
+    /// a CI runner turned the refused connect above into exactly this: connected, then reset.)
+    @Test func resetBeforeTheHelloIsAConnectionFailure() async throws {
+        let server = try ResettingServer()
+        let transport = NetworkTransport(host: "127.0.0.1", port: server.port, timeout: .seconds(5))
+        await #expect {
+            try await transport.open()
+        } throws: { error in
+            guard case ScannerError.connectionFailed = error else { return false }
+            return true
+        }
+        server.close()
+    }
+
+    /// The test server's hello must not wait for a cooperative thread. Fails under
+    /// `LIBDISPATCH_COOPERATIVE_POOL_STRICT=1` (one cooperative thread, which this test blocks) if it does.
+    @Test func testServerSendsTheHelloWithoutACooperativeThread() async throws {
+        let server = try ISTestServer(scanner: SimulatedScanner())
+        let port = try await server.start()
+        defer { server.stop() }
+        let fd = socket(AF_INET, SOCK_STREAM, 0)
+        defer { Darwin.close(fd) }
+        var address = loopback(port: port)
+        let connected = withUnsafePointer(to: &address) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { connect(fd, $0, socklen_t(MemoryLayout<sockaddr_in>.size)) }
+        }
+        #expect(connected == 0)
+        var timeout = timeval(tv_sec: 0, tv_usec: 300_000)
+        setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, socklen_t(MemoryLayout<timeval>.size))
+        var header = [UInt8](repeating: 0, count: ISPacket.headerLength)
+        let n = recv(fd, &header, header.count, MSG_WAITALL)  // blocks this cooperative thread
+        #expect(n == header.count && SubnetProbe.isHello(header), "no hello within 300 ms (got \(n) bytes)")
+    }
+}
+
+private func loopback(port: UInt16) -> sockaddr_in {
+    var address = sockaddr_in()
+    address.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
+    address.sin_family = sa_family_t(AF_INET)
+    address.sin_port = port.bigEndian
+    inet_pton(AF_INET, "127.0.0.1", &address.sin_addr)
+    return address
+}
+
+/// Accepts one connection on a loopback port and resets it at once (`SO_LINGER` 0, then close).
+private final class ResettingServer: Sendable {
+    let port: UInt16
+    private let fd: Int32
+
+    init() throws {
+        let listening = socket(AF_INET, SOCK_STREAM, 0)
+        var address = loopback(port: 0)
+        var size = socklen_t(MemoryLayout<sockaddr_in>.size)
+        let bound = withUnsafePointer(to: &address) { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { bind(listening, $0, size) } }
+        guard bound == 0, listen(listening, 4) == 0 else { Darwin.close(listening); throw POSIXError(.EADDRINUSE) }
+        _ = withUnsafeMutablePointer(to: &address) { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { getsockname(listening, $0, &size) } }
+        fd = listening
+        port = UInt16(bigEndian: address.sin_port)
+        Thread.detachNewThread {
+            let client = accept(listening, nil, nil)
+            guard client >= 0 else { return }
+            var linger = Darwin.linger(l_onoff: 1, l_linger: 0)
+            setsockopt(client, SOL_SOCKET, SO_LINGER, &linger, socklen_t(MemoryLayout<Darwin.linger>.size))
+            Darwin.close(client)
+        }
+    }
+
+    func close() { Darwin.close(fd) }
 }

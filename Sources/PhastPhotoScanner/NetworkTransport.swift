@@ -52,7 +52,10 @@ public actor NetworkTransport: ScannerTransport {
         } catch {
             conn.cancel()
             connection = nil
-            throw error
+            // A network error during the hello (a reset, a closed socket) means the scanner couldn't be reached:
+            // report it like a failed connect rather than as a raw NWError.
+            if error is ScannerError || error is CancellationError { throw error }
+            throw ScannerError.connectionFailed(error.localizedDescription)
         }
     }
 
