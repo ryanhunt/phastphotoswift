@@ -23,6 +23,8 @@ xcodebuild -scheme PhastPhoto-Package -destination 'generic/platform=iOS Simulat
 swift run phastphoto discover|info|capa|status  # against a real scanner on the network
 swift run phastphoto scan --dpi 300 --out scans [--process]
 swift run phastphoto process --sides picture --out reprocessed scans/raw   # no scanner needed
+xcodebuild -project Examples/PhastPhotoHarness/PhastPhotoHarness.xcodeproj -scheme PhastPhotoHarness \
+  -destination 'generic/platform=iOS Simulator' build   # iOS test app; `xcodegen generate` there after adding files
 ```
 
 ## Layout
@@ -30,11 +32,14 @@ swift run phastphoto process --sides picture --out reprocessed scans/raw   # no 
 | Path | Role |
 |---|---|
 | `Sources/PhastPhotoProtocol` | Pure wire formats, no I/O: `ISPacket`, `ScannerHello`, `ESCI2` tokens/parameters/commands/reply header, `ScanSettings` (+ `photoDefaults`, length limit), `SideMode`/`ScanSide`, `ScannerInfo`/`ScannerStatus` (+ friendly text), `JPEGHeight` |
-| `Sources/PhastPhotoScanner` | `ScannerTransport` protocol; `NetworkTransport` (Network.framework), `USBTransport` (macOS, IOUSBHost, behind a fakeable pipes protocol), `ScannerConnection` (pick a transport); `ScannerDiscovery` (Bonjour, FF-680W filter), `SubnetProbe`; `ScannerSession` (actor: serialised exchanges, model check, scan loop, graceful stop); `RawSpool`, `PrintAssembler`, `ScannerWatch` |
+| `Sources/PhastPhotoScanner` | `ScannerTransport` protocol; `NetworkTransport` (Network.framework), `USBTransport` (macOS: IOUSBHost; iPadOS: `DriverKitPipes` through the driver extension; both behind a fakeable pipes protocol), `ScannerConnection` (pick a transport); `ScannerDiscovery` (Bonjour, FF-680W filter), `SubnetProbe`; `ScannerSession` (actor: serialised exchanges, model check, scan loop, graceful stop); `RawSpool`, `PrintAssembler`, `ScannerWatch` |
 | `Sources/PhastPhotoImaging` | No Vision. `RGBImage` (R,G,B bytes, stored orientation, ICC kept) and `JPEGWriting` (derived JPEGs keep metadata); crop: `PhotoBox` → `PhotoQuad` → `AutoCrop` (+ `CropSampling`); `InkFraction`; `BackText`; `Duplicates`/`DuplicateIndex` (Pillow-compatible Lanczos in `DuplicatesResample`); `Enhance`/`EnhancedCopy` (Pillow arithmetic by hand); `PhotoMetadata`, `PhotoOrientation` (lossless); `FastFotoImport` |
 | `Sources/PhastPhotoVision` | Apple Vision, depends on Imaging: `BackReader`, `BackPolicy`, `AutoRotation`, `EyeFinder`, `VisionSupport` (timeouts, `VisionWarmUp`). Pure decision functions are separate from Vision calls so they can be unit tested |
 | `Sources/PhastPhotoPipeline` | `PrintPipeline` (ffscan's `process_page` order over one print, returns data, writes nothing), `PrintAnalyzer` (Vision behind a protocol; `VisionAnalyzer` is the real one), `SideMode` → `BackPolicy` mapping |
+| `Sources/CPhastPhotoDriverKit` | C client for the iPadOS USB driver (IOKit has no Swift module on iOS) and `PhastPhotoUSBProtocol.h`, the selectors shared with the driver |
+| `Drivers/PhastPhotoUSBDriver` | DriverKit driver extension (C++, `.iig`) apps embed for USB on M-series iPads, and `TestHost`, an iPad app that embeds it for on-device checks; `project.yml` (XcodeGen). Signing in a git-ignored `Config/Local.xcconfig` (paid team). Worked on an iPad Pro M1 |
 | `Sources/phastphoto` | Developer CLI: `main.swift` (arguments, commands), `PrintFolder.swift` (`PrintFolder` saves pipeline results, `ProcessingQueue` for `scan --process`, `RawScanFiles` pairs saved raw scans); tested by `Tests/phastphotoTests` |
+| `Examples/PhastPhotoHarness` | SwiftUI iOS/iPadOS app for roadmap 1.1's device checks (discovery and permission, info/status, scan → pipeline, time and peak memory per print, synthetic sample). XcodeGen `project.yml`; the generated project is committed; team unset (`Config/Local.xcconfig`, git-ignored) |
 | `Tests/PhastPhotoScannerTests/SimulatedScanner.swift` | In-memory ESC/I-2 scanner that enforces the reply rules; `ISTestServer` (loopback "IS" server) is in `NetworkTransportTests.swift` |
 
 Imaging code works on synthetic images in tests; per-pixel loops are ~200x slower in Debug, so keep test images

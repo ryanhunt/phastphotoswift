@@ -1,10 +1,11 @@
-#if os(macOS)
+#if os(macOS) || os(iOS)
 import Foundation
 import Testing
 
 @testable import PhastPhotoScanner
 
-/// A scripted stand-in for the USB bulk endpoints. Reads pop queued replies; a queued `nil` is a timeout.
+/// A scripted stand-in for the USB bulk endpoints. Reads pop queued replies; a queued `nil` is a timeout and
+/// ``stale`` is an overrun (leftover data).
 private actor FakePipes: USBPipes {
     enum Event: Equatable {
         case write(Data)
@@ -19,11 +20,14 @@ private actor FakePipes: USBPipes {
 
     init(replies: [Data?] = []) { self.replies = replies }
 
+    static let stale = Data("stale data marker".utf8)
+
     func write(_ data: Data) async throws { events.append(.write(data)) }
 
     func read(maxLength: Int) async throws -> Data {
         events.append(.read(maxLength))
         guard !replies.isEmpty, let reply = replies.removeFirst() else { throw ScannerError.timedOut }
+        if reply == Self.stale { throw USBStaleData() }
         return reply
     }
 
@@ -107,6 +111,36 @@ private func transport(over pipes: FakePipes) -> USBTransport {
             .reset, .reclaim,
             .write(Data([0x1C, 0x58])), .read(1),
         ])
+    }
+
+    /// Leftovers of an interrupted scan (an overrun) on the first transfer: reset and retry, like a timeout.
+    @Test func staleDataEnteringCommandModeResetsAndRetriesOnce() async throws {
+        let pipes = FakePipes(replies: [FakePipes.stale, Data([0x06])])
+        let t = transport(over: pipes)
+        try await t.open()
+        #expect(try await t.transfer([Data([0x1C, 0x58])], replyLength: 1) == Data([0x06]))
+        #expect(await pipes.events.filter { $0 == .reset }.count == 1)
+    }
+
+    /// Later in a session, or again after the reset, an overrun is a clear error and no reset.
+    @Test func laterStaleDataIsAnErrorWithoutReset() async throws {
+        for replies in [[Data([0x06]), FakePipes.stale], [FakePipes.stale, FakePipes.stale]] {
+            let pipes = FakePipes(replies: replies)
+            let t = transport(over: pipes)
+            try await t.open()
+            do {
+                _ = try await t.transfer([Data([0x1C, 0x58])], replyLength: 1)
+                _ = try await t.transfer([Data([0x1C, 0x58])], replyLength: 1)
+                Issue.record("no error")
+            } catch {
+                guard case ScannerError.connectionFailed(let message) = error else {
+                    Issue.record("\(error)")
+                    continue
+                }
+                #expect(message == USBTransport.staleDataMessage)
+            }
+            #expect(await pipes.events.filter { $0 == .reset }.count == (replies[0] == FakePipes.stale ? 1 : 0))
+        }
     }
 
     @Test func secondTimeoutAfterResetIsReported() async throws {

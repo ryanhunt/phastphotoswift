@@ -32,6 +32,7 @@ but checked only with injected inputs (plus Vision OCR of rendered text on macOS
 | Eye finder | 6.2 | Code done (`EyeFinder`); real flash photos unverified **[Device]** |
 | Subnet probe, transport choice, watch | 7.1, 7.3, 7.4 | Done (`SubnetProbe`, `ScannerConnection`, `ScannerWatch`) |
 | USB on macOS | 7.2 | Code done (`USBTransport`, IOUSBHost); framing tested with fake pipes, never run on a scanner **[HW]** |
+| USB on iPadOS | 7.5 | Works on an iPad Pro M1 (iPadOS 27.2.1): `INFO`, `STATUS`, single-sided and duplex scans over USB; 600 dpi, stacks, timeouts and reset not yet tried **[HW]** |
 | FastFoto import | 8.1 | Done (`FastFotoImport`) |
 | Per-print pipeline | 9.1 | Done (`PrintPipeline` in `PhastPhotoPipeline`); tested with synthetic prints and injected Vision results |
 | CLI processing | 9.2 | Done: `scan --process` and `process` run `PrintPipeline` on live and saved raw scans |
@@ -114,6 +115,13 @@ on newer firmware.
 - First run on an iOS device (permission prompt, refusal).
 - Scanner asleep (ffscan uses a 15 s timeout for status checks after a 5 s one failed on wake).
 - Whether raw JPEGs carry ICC, JFIF density or EXIF.
+
+**First hardware results (27 November 2026, firmware 18.60.SP14P2):** `INFO` and `STATUS` work over Wi-Fi and
+USB; single-sided and duplex scans complete. Every scan returned pages 36 in long (`#pen` 2550 × 10800 at
+300 dpi, the `#ACQ` maximum), one print followed by backing, with `PEDT` set. That happened over USB, over Wi-Fi,
+and with ffscan's own code, so it is scanner-side. In a duplex scan of two prints, only the first came back.
+Next: try a shorter `#ACQ` length, a stack of prints, and the paper-end flag variants, and compare with Epson's
+own software on this firmware.
 
 **1.2 Private raw corpus** (git-ignored `scans/`), for phases 2–6:
 - 300 and 600 dpi, deskew on and off;
@@ -292,6 +300,20 @@ any constant.
 **7.4 Watch helper.** New session per stack, poll every 2 s, friendly status text (`ff680w.py:752-766`,
 `app.py:716-722`). Tests: simulated.
 
+**7.5 USB on iPadOS** (`Drivers/PhastPhotoUSBDriver`, `PhastPhotoScanner/DriverKitPipes.swift`,
+`CPhastPhotoDriverKit`) **[HW]**.
+- M-series iPads only (DriverKit); no iPhone, no A-series iPad. A DriverKit extension the app embeds claims
+  interface 0 and does the bulk transfers; `USBTransport` on iOS reaches it through its user client (write, read,
+  reset selectors in `PhastPhotoUSBProtocol.h`), reusing the macOS framing and its tests.
+- *Done, partly checked on hardware:* on an iPad Pro 12.9-inch (M1), iPadOS 27.2.1, the driver loaded, the
+  `TestHost` app found it, and `INFO`, `STATUS`, single-sided and duplex 300 dpi scans worked over USB, at
+  5.5–6.6 MB/s (Wi-Fi: 1.0–1.2 MB/s).
+  Two driver bugs found on the device are fixed: buffer mappings the driver needs to write to are read-only, so
+  the write buffer is now `InOut`, and reads go straight into the app's buffer. Not yet tried: 600 dpi, a stack
+  of prints, timeouts, reset, unplugging. The driver's README has the details. Distribution needs Apple's DriverKit grant
+  for Epson's vendor ID.
+- *Not USB:* see 1.1 for the 36 in pages.
+
 ## Phase 8: import
 
 **8.1 FastFoto folders** (`PhastPhotoImaging/FastFotoImport.swift`).
@@ -324,7 +346,6 @@ real Vision on macOS (back text read, blank backs dropped, a repeated print flag
 
 - **Scan button** (interrupt endpoint `0x83` / `com.epson.EventManager`).
 - **TLS network path** (`ESNWInterface`).
-- **USB on iPadOS** (DriverKit).
 
 ## Known limitations
 

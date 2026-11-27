@@ -20,7 +20,9 @@ let package = Package(
     ],
     targets: [
         .target(name: "PhastPhotoProtocol"),
-        .target(name: "PhastPhotoScanner", dependencies: ["PhastPhotoProtocol"]),
+        // C client for the iPadOS USB driver extension (Drivers/PhastPhotoUSBDriver); IOKit has no Swift module on iOS.
+        .target(name: "CPhastPhotoDriverKit", linkerSettings: [.linkedFramework("IOKit"), .linkedFramework("CoreFoundation")]),
+        .target(name: "PhastPhotoScanner", dependencies: ["PhastPhotoProtocol", "CPhastPhotoDriverKit"]),
         .target(name: "PhastPhotoImaging"),
         .target(name: "PhastPhotoVision", dependencies: ["PhastPhotoImaging"]),
         .target(name: "PhastPhotoPipeline",

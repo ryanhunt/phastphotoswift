@@ -1,0 +1,3 @@
+// Copy to Local.xcconfig (git-ignored). Use a paid team: DriverKit needs one.
+DEVELOPMENT_TEAM = ABCDE12345
+BUNDLE_ID_PREFIX = com.yourcompany.phastphoto
