@@ -1,0 +1,28 @@
+// The PhastPhoto USB driver extension: claims interface 0 of the Epson FastFoto FF-680W (VID 0x04B8,
+// PID 0x016B) and does bulk transfers for the app through PhastPhotoUSBUserClient. See README.md.
+
+#ifndef PhastPhotoUSBDriver_h
+#define PhastPhotoUSBDriver_h
+
+#include <Availability.h>
+#include <DriverKit/IOService.iig>
+#include <USBDriverKit/IOUSBHostInterface.iig>
+
+class PhastPhotoUSBDriver : public IOService
+{
+public:
+    virtual bool init() override;
+    virtual void free() override;
+    virtual kern_return_t Start(IOService *provider) override;
+    virtual kern_return_t Stop(IOService *provider) override;
+    virtual kern_return_t NewUserClient(uint32_t type, IOUserClient **userClient) override;
+
+    // Called by the user client in the same driver process; not part of the IIG dispatch.
+    virtual kern_return_t BulkWrite(const void *bytes, uint32_t length, uint32_t timeoutMs) LOCALONLY;
+    virtual kern_return_t BulkRead(IOMemoryDescriptor *into, uint32_t maxLength, uint32_t timeoutMs,
+                                   uint32_t *received) LOCALONLY;
+    virtual kern_return_t ResetDevice() LOCALONLY;
+    virtual void UserClientClosed() LOCALONLY;
+};
+
+#endif

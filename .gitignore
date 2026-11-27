@@ -21,3 +21,9 @@ NOTES.local.md
 
 # Agent worktrees
 .claude/worktrees/
+
+# Xcode builds of Drivers/ with -target
+build/
+
+# Signing for on-device builds of Drivers/
+Drivers/**/Local.xcconfig

@@ -16,3 +16,13 @@ jobs:
         run: swift test
       - name: Build (iOS Simulator)
         run: xcodebuild -scheme PhastPhoto-Package -destination 'generic/platform=iOS Simulator' build
+
+  driver:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the iPadOS USB driver extension (DriverKit)
+        # The generated project is committed, so the runner needs no XcodeGen.
+        run: |
+          xcodebuild -project Drivers/PhastPhotoUSBDriver/PhastPhotoUSBDriver.xcodeproj -target PhastPhotoUSBDriver \
+            -sdk driverkit build CODE_SIGNING_ALLOWED=NO

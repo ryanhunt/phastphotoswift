@@ -1,0 +1,534 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0872AEB26988F3B3FBFB2EE9 /* PhastPhotoUSBDriver.iig in Sources */ = {isa = PBXBuildFile; fileRef = D96CBE8C937D92B087439148 /* PhastPhotoUSBDriver.iig */; };
+		09602C2FB76FA7D4BD3E9D53 /* USBCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = F599F9CEFB6005E2DB9B01D4 /* USBCheck.swift */; };
+		122E020CE8F8AA4C583626B6 /* PhastPhotoUSBUserClient.iig in Sources */ = {isa = PBXBuildFile; fileRef = 200886092604B027612B7F96 /* PhastPhotoUSBUserClient.iig */; };
+		19138ED2FABB885DADB89155 /* PhastPhotoScanner in Frameworks */ = {isa = PBXBuildFile; productRef = 685CB1CA9782380468AAF5F6 /* PhastPhotoScanner */; };
+		45DA2A9A181585F35CB9B9C3 /* PhastPhotoUSBUserClient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F256B23D0C3340E68554580 /* PhastPhotoUSBUserClient.cpp */; };
+		52BBCE4D6EFD7E9394CC604B /* PhastPhotoUSBDriver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A0F19FC78F6CD2D34E448D7D /* PhastPhotoUSBDriver.cpp */; };
+		770B3A97248D416BDD340AAA /* PhastPhotoProtocol in Frameworks */ = {isa = PBXBuildFile; productRef = 67CEB847A7C73BF9F2A56F6D /* PhastPhotoProtocol */; };
+		9DC895EFC675F554D3F5206C /* USBHostApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC26678B09A33666535A389 /* USBHostApp.swift */; };
+		D504F069D1F0E1B949F333C1 /* PhastPhotoUSBDriver.dext in Embed System Extensions */ = {isa = PBXBuildFile; fileRef = 15FD232EDE0234879C923219 /* PhastPhotoUSBDriver.dext */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		FA6CC83F7D8E57B065E0B18D /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 39E66521A9D723597D686650 /* Settings.bundle */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		39B36F4C8F4BC93244DB4929 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FC310D0DD68B92169FC05579 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 99CFF020C72A49EB302D8843;
+			remoteInfo = PhastPhotoUSBDriver;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		89CE31934EC822E746E51A05 /* Embed System Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(SYSTEM_EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				D504F069D1F0E1B949F333C1 /* PhastPhotoUSBDriver.dext in Embed System Extensions */,
+			);
+			name = "Embed System Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0513175269A0AE0014D2D09F /* PhastPhotoUSBDriver.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PhastPhotoUSBDriver.entitlements; sourceTree = "<group>"; };
+		15FD232EDE0234879C923219 /* PhastPhotoUSBDriver.dext */ = {isa = PBXFileReference; explicitFileType = "wrapper.driver-extension"; includeInIndex = 0; path = PhastPhotoUSBDriver.dext; sourceTree = BUILT_PRODUCTS_DIR; };
+		1EC26678B09A33666535A389 /* USBHostApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = USBHostApp.swift; sourceTree = "<group>"; };
+		1F256B23D0C3340E68554580 /* PhastPhotoUSBUserClient.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PhastPhotoUSBUserClient.cpp; sourceTree = "<group>"; };
+		200886092604B027612B7F96 /* PhastPhotoUSBUserClient.iig */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.iig; path = PhastPhotoUSBUserClient.iig; sourceTree = "<group>"; };
+		39E66521A9D723597D686650 /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = wrapper.cfbundle; path = Settings.bundle; sourceTree = "<group>"; };
+		91DDFC2EFB94A898EAEE5BCA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		A0F19FC78F6CD2D34E448D7D /* PhastPhotoUSBDriver.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PhastPhotoUSBDriver.cpp; sourceTree = "<group>"; };
+		AB64E5361DCA11C245971617 /* ipad-usb */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ipad-usb"; path = ../..; sourceTree = SOURCE_ROOT; };
+		BAD38A830A2C51F74682A697 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		D76B4F2E385CDFAACB74B9C3 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
+		D96CBE8C937D92B087439148 /* PhastPhotoUSBDriver.iig */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.iig; path = PhastPhotoUSBDriver.iig; sourceTree = "<group>"; };
+		F599F9CEFB6005E2DB9B01D4 /* USBCheck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = USBCheck.swift; sourceTree = "<group>"; };
+		FAC0FC3724A0AF75A91610D5 /* PhastPhotoUSBHost.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PhastPhotoUSBHost.entitlements; sourceTree = "<group>"; };
+		FB65B88B60E8BA30E7E7A202 /* PhastPhotoUSBHost.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PhastPhotoUSBHost.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		05F9B905033BC83BE4DB2EAF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				19138ED2FABB885DADB89155 /* PhastPhotoScanner in Frameworks */,
+				770B3A97248D416BDD340AAA /* PhastPhotoProtocol in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0D8F81BD06DC13C629BC7AE4 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				15FD232EDE0234879C923219 /* PhastPhotoUSBDriver.dext */,
+				FB65B88B60E8BA30E7E7A202 /* PhastPhotoUSBHost.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		19C6C4A616E4A6A13E830D78 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				AB64E5361DCA11C245971617 /* ipad-usb */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		1B402E24FF3B2258F0361CDE /* PhastPhotoUSBDriver */ = {
+			isa = PBXGroup;
+			children = (
+				91DDFC2EFB94A898EAEE5BCA /* Info.plist */,
+				A0F19FC78F6CD2D34E448D7D /* PhastPhotoUSBDriver.cpp */,
+				0513175269A0AE0014D2D09F /* PhastPhotoUSBDriver.entitlements */,
+				D96CBE8C937D92B087439148 /* PhastPhotoUSBDriver.iig */,
+				1F256B23D0C3340E68554580 /* PhastPhotoUSBUserClient.cpp */,
+				200886092604B027612B7F96 /* PhastPhotoUSBUserClient.iig */,
+			);
+			path = PhastPhotoUSBDriver;
+			sourceTree = "<group>";
+		};
+		6BA2D36501CBE69EA96F01A5 /* TestHost */ = {
+			isa = PBXGroup;
+			children = (
+				BAD38A830A2C51F74682A697 /* Info.plist */,
+				FAC0FC3724A0AF75A91610D5 /* PhastPhotoUSBHost.entitlements */,
+				39E66521A9D723597D686650 /* Settings.bundle */,
+				F599F9CEFB6005E2DB9B01D4 /* USBCheck.swift */,
+				1EC26678B09A33666535A389 /* USBHostApp.swift */,
+			);
+			path = TestHost;
+			sourceTree = "<group>";
+		};
+		9834CF62FE753B1863C5AB96 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				D76B4F2E385CDFAACB74B9C3 /* Signing.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		A844E055D3B78C061D9425C4 = {
+			isa = PBXGroup;
+			children = (
+				9834CF62FE753B1863C5AB96 /* Config */,
+				19C6C4A616E4A6A13E830D78 /* Packages */,
+				1B402E24FF3B2258F0361CDE /* PhastPhotoUSBDriver */,
+				6BA2D36501CBE69EA96F01A5 /* TestHost */,
+				0D8F81BD06DC13C629BC7AE4 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		22B3F9D76F21BA4845AC1923 /* PhastPhotoUSBHost */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FF18F03B410474FAAE4A251C /* Build configuration list for PBXNativeTarget "PhastPhotoUSBHost" */;
+			buildPhases = (
+				A27C65B91930F794A03105FE /* Sources */,
+				7AC34898F3FD03F8A2DC9215 /* Resources */,
+				05F9B905033BC83BE4DB2EAF /* Frameworks */,
+				89CE31934EC822E746E51A05 /* Embed System Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BA3F19DA508CE1A36130DFFC /* PBXTargetDependency */,
+			);
+			name = PhastPhotoUSBHost;
+			packageProductDependencies = (
+				685CB1CA9782380468AAF5F6 /* PhastPhotoScanner */,
+				67CEB847A7C73BF9F2A56F6D /* PhastPhotoProtocol */,
+			);
+			productName = PhastPhotoUSBHost;
+			productReference = FB65B88B60E8BA30E7E7A202 /* PhastPhotoUSBHost.app */;
+			productType = "com.apple.product-type.application";
+		};
+		99CFF020C72A49EB302D8843 /* PhastPhotoUSBDriver */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 048D88CAD406698BDA4E7398 /* Build configuration list for PBXNativeTarget "PhastPhotoUSBDriver" */;
+			buildPhases = (
+				16F726397322D8765733EC82 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PhastPhotoUSBDriver;
+			packageProductDependencies = (
+			);
+			productName = PhastPhotoUSBDriver;
+			productReference = 15FD232EDE0234879C923219 /* PhastPhotoUSBDriver.dext */;
+			productType = "com.apple.product-type.driver-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		FC310D0DD68B92169FC05579 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					22B3F9D76F21BA4845AC1923 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					99CFF020C72A49EB302D8843 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = BA30E8B269C2363D31A96AAB /* Build configuration list for PBXProject "PhastPhotoUSBDriver" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = A844E055D3B78C061D9425C4;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				74F7A821773AFE93D8177C6B /* XCLocalSwiftPackageReference "../.." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 0D8F81BD06DC13C629BC7AE4 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				99CFF020C72A49EB302D8843 /* PhastPhotoUSBDriver */,
+				22B3F9D76F21BA4845AC1923 /* PhastPhotoUSBHost */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		7AC34898F3FD03F8A2DC9215 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FA6CC83F7D8E57B065E0B18D /* Settings.bundle in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		16F726397322D8765733EC82 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				52BBCE4D6EFD7E9394CC604B /* PhastPhotoUSBDriver.cpp in Sources */,
+				0872AEB26988F3B3FBFB2EE9 /* PhastPhotoUSBDriver.iig in Sources */,
+				45DA2A9A181585F35CB9B9C3 /* PhastPhotoUSBUserClient.cpp in Sources */,
+				122E020CE8F8AA4C583626B6 /* PhastPhotoUSBUserClient.iig in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A27C65B91930F794A03105FE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				09602C2FB76FA7D4BD3E9D53 /* USBCheck.swift in Sources */,
+				9DC895EFC675F554D3F5206C /* USBHostApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		BA3F19DA508CE1A36130DFFC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 99CFF020C72A49EB302D8843 /* PhastPhotoUSBDriver */;
+			targetProxy = 39B36F4C8F4BC93244DB4929 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		6996CFD4F2679E8D700ADAA8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D76B4F2E385CDFAACB74B9C3 /* Signing.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DRIVERKIT_DEPLOYMENT_TARGET = 22.0;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		A10564000A5E9E809341A204 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_ENTITLEMENTS = PhastPhotoUSBDriver/PhastPhotoUSBDriver.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../Sources/CPhastPhotoDriverKit/include";
+				INFOPLIST_FILE = PhastPhotoUSBDriver/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					USBDriverKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX).USBHost.Driver";
+				PRODUCT_NAME = PhastPhotoUSBDriver;
+				SDKROOT = driverkit;
+				SUPPORTED_PLATFORMS = driverkit;
+			};
+			name = Debug;
+		};
+		B19D0AACD55F6647B2B50748 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D76B4F2E385CDFAACB74B9C3 /* Signing.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DRIVERKIT_DEPLOYMENT_TARGET = 22.0;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		C18DC396E31A1217B16DCE73 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_ENTITLEMENTS = PhastPhotoUSBDriver/PhastPhotoUSBDriver.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../Sources/CPhastPhotoDriverKit/include";
+				INFOPLIST_FILE = PhastPhotoUSBDriver/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					USBDriverKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX).USBHost.Driver";
+				PRODUCT_NAME = PhastPhotoUSBDriver;
+				SDKROOT = driverkit;
+				SUPPORTED_PLATFORMS = driverkit;
+			};
+			name = Release;
+		};
+		E1378EDA079EB3C9E7F9B526 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = TestHost/PhastPhotoUSBHost.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TestHost/Info.plist;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX).USBHost";
+				PRODUCT_NAME = "PhastPhoto USB";
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Release;
+		};
+		FDA1C35C01A861FBACD0D173 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = TestHost/PhastPhotoUSBHost.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TestHost/Info.plist;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX).USBHost";
+				PRODUCT_NAME = "PhastPhoto USB";
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		048D88CAD406698BDA4E7398 /* Build configuration list for PBXNativeTarget "PhastPhotoUSBDriver" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10564000A5E9E809341A204 /* Debug */,
+				C18DC396E31A1217B16DCE73 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BA30E8B269C2363D31A96AAB /* Build configuration list for PBXProject "PhastPhotoUSBDriver" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B19D0AACD55F6647B2B50748 /* Debug */,
+				6996CFD4F2679E8D700ADAA8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FF18F03B410474FAAE4A251C /* Build configuration list for PBXNativeTarget "PhastPhotoUSBHost" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FDA1C35C01A861FBACD0D173 /* Debug */,
+				E1378EDA079EB3C9E7F9B526 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		74F7A821773AFE93D8177C6B /* XCLocalSwiftPackageReference "../.." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		67CEB847A7C73BF9F2A56F6D /* PhastPhotoProtocol */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PhastPhotoProtocol;
+		};
+		685CB1CA9782380468AAF5F6 /* PhastPhotoScanner */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PhastPhotoScanner;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = FC310D0DD68B92169FC05579 /* Project object */;
+}

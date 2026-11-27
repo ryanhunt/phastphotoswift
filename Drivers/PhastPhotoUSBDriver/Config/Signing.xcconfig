@@ -1,0 +1,6 @@
+// Signing for on-device builds. Copy Local.xcconfig.example to Local.xcconfig (git-ignored) and set your paid
+// team and bundle ID prefix there; nothing personal goes in this file. A free Personal Team can't sign
+// DriverKit entitlements.
+BUNDLE_ID_PREFIX = com.example.phastphoto
+DEVELOPMENT_TEAM =
+#include? "Local.xcconfig"
