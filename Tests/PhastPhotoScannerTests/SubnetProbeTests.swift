@@ -221,9 +221,8 @@ private let quick = (connect: Duration.milliseconds(400), read: Duration.millise
     @Test func buildsTheMatchingTransport() async throws {
         #expect(try ScannerConnection.make(.wifi(host: "192.0.2.5")) is NetworkTransport)
         #expect(try ScannerConnection.make(.bonjour(Self.bonjour)) is NetworkTransport)
-        #if os(macOS)
+        // macOS: IOUSBHost; iOS: the driver extension
         #expect(try ScannerConnection.make(.usb) is USBTransport)
-        #endif
     }
 }
 

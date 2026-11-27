@@ -1,0 +1,61 @@
+# XcodeGen spec: the driver extension, and a minimal iPad host app that embeds it for on-device checks.
+#   xcodegen generate --spec Drivers/PhastPhotoUSBDriver/project.yml
+# The driver alone builds unsigned (CI does this); the host app needs a paid team in Config/Local.xcconfig.
+name: PhastPhotoUSBDriver
+options:
+  bundleIdPrefix: com.example.phastphoto
+configFiles:
+  Debug: Config/Signing.xcconfig
+  Release: Config/Signing.xcconfig
+packages:
+  PhastPhoto:
+    path: ../..
+settings:
+  base:
+    DRIVERKIT_DEPLOYMENT_TARGET: "22.0"  # DriverKit 22 = iPadOS 16 / macOS 13
+    CODE_SIGN_STYLE: Automatic
+targets:
+  PhastPhotoUSBDriver:
+    type: driver-extension
+    platform: macOS
+    sources:
+      - path: PhastPhotoUSBDriver
+    settings:
+      base:
+        SDKROOT: driverkit
+        SUPPORTED_PLATFORMS: driverkit
+        # the driver's ID extends the app's: the host app looks for "<app ID>.Driver"
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_PREFIX).USBHost.Driver
+        PRODUCT_NAME: PhastPhotoUSBDriver
+        INFOPLIST_FILE: PhastPhotoUSBDriver/Info.plist
+        CODE_SIGN_ENTITLEMENTS: PhastPhotoUSBDriver/PhastPhotoUSBDriver.entitlements
+        HEADER_SEARCH_PATHS: $(SRCROOT)/../../Sources/CPhastPhotoDriverKit/include
+        CLANG_CXX_LANGUAGE_STANDARD: gnu++20
+        OTHER_LDFLAGS: [-framework, USBDriverKit]
+        GCC_TREAT_WARNINGS_AS_ERRORS: YES
+  PhastPhotoUSBHost:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: TestHost
+    dependencies:
+      - package: PhastPhoto
+        product: PhastPhotoScanner
+      - package: PhastPhoto
+        product: PhastPhotoProtocol
+      - target: PhastPhotoUSBDriver
+        embed: true
+        codeSign: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_PREFIX).USBHost
+        PRODUCT_NAME: PhastPhoto USB
+        TARGETED_DEVICE_FAMILY: "2"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        INFOPLIST_FILE: TestHost/Info.plist
+        CODE_SIGN_ENTITLEMENTS: TestHost/PhastPhotoUSBHost.entitlements
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
