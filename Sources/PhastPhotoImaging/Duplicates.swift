@@ -107,8 +107,13 @@ public enum Duplicates {
 
     /// Hashes of the picture file at `url`. JPEGs are decoded at reduced size (ImageIO), like Pillow's `draft`.
     public static func hashes(contentsOf url: URL) throws -> [UInt64] {
-        let data = try Data(contentsOf: url)
-        return hashes(try RGBImage.decode(data, maxPixelSize: thumbnailSize))
+        try hashes(ofJPEG: Data(contentsOf: url))
+    }
+
+    /// Hashes of encoded picture data, decoded the same way as ``hashes(contentsOf:)``: a picture not yet
+    /// written to disk hashes like the file it will become.
+    public static func hashes(ofJPEG data: Data) throws -> [UInt64] {
+        hashes(try RGBImage.decode(data, maxPixelSize: thumbnailSize))
     }
 
     /// Smallest Hamming distance between photo `a` (as stored, its first hash) and any rotation of photo `b`.
@@ -178,6 +183,15 @@ public final class DuplicateIndex: @unchecked Sendable {
     public func findDuplicate(of url: URL, in candidates: [URL]) throws -> URL? {
         let h = try hashes(for: url)
         for other in candidates where other.path != url.path {
+            if Duplicates.distance(h, try hashes(for: other)) <= Duplicates.threshold { return other }
+        }
+        return nil
+    }
+
+    /// The first of `candidates` that shows the same print as the encoded picture `data` (not yet on disk), or `nil`.
+    public func findDuplicate(ofJPEG data: Data, in candidates: [URL]) throws -> URL? {
+        let h = try Duplicates.hashes(ofJPEG: data)
+        for other in candidates {
             if Duplicates.distance(h, try hashes(for: other)) <= Duplicates.threshold { return other }
         }
         return nil

@@ -21,6 +21,7 @@ This is a library, not an app: it has no UI. Apps add it as a Swift package and 
 | `PhastPhotoScanner` | The client: discovery (`ScannerDiscovery` over Bonjour, `SubnetProbe` fallback), transports (`NetworkTransport` for Wi-Fi, `USBTransport` on macOS, `ScannerConnection.automatic()` to pick one), `ScannerSession` for queries and scans, `RawSpool` to write pages to disk as they arrive, `PrintAssembler` to pair each picture with its back, `ScannerWatch` to scan each stack as it is loaded. |
 | `PhastPhotoImaging` | Image processing, no Vision: `AutoCrop` (find, straighten and crop the print), `InkFraction` (blank backs), `BackText` (keep handwriting, drop lab codes; dates), `Duplicates`/`DuplicateIndex`, enhancement (`removingRedEye`, `restoredFaded`, `autoEnhanced`, `adjusted`, `RGBImage.enhancedCopy`), `PhotoMetadata` and `PhotoOrientation` (lossless), `FastFotoImport`. |
 | `PhastPhotoVision` | Apple Vision: `BackReader` (OCR of print backs), `BackPolicy` (which backs to keep), `AutoRotation` (faces, then scene), `EyeFinder` (for red-eye), `VisionWarmUp`. |
+| `PhastPhotoPipeline` | `PrintPipeline`: runs each print through ffscan's order (back text, crop, blank-back and fast-mode checks, duplicates, enhanced copy, rotation, metadata) and returns the files to save. Vision sits behind `PrintAnalyzer`, so tests and apps can inject results. |
 | `phastphoto` | A small macOS command-line tool for checking the library against a real scanner. |
 
 Requires iOS 16 / macOS 13 or later and Swift 6.
@@ -64,7 +65,32 @@ try await ScannerSession.withSession(transport: NetworkTransport(endpoint: scann
 }
 ```
 
-Processing a scanned picture (no scanner needed):
+Processing each print as it arrives, the way ffscan does:
+
+```swift
+import PhastPhotoImaging
+import PhastPhotoPipeline
+import PhastPhotoScanner
+
+let pipeline = PrintPipeline(settings: PrintPipelineSettings(
+    enhancement: EnhancementOptions(),                    // also make an enhanced copy
+    metadata: PhotoMetadata(album: "Summer 1974")))
+var assembler = PrintAssembler(mode: .picture)            // pairs each picture with its back
+for try await page in session.pages(ScanSettings.photoDefaults.with(sideMode: .picture)) {
+    for item in assembler.add(page) {
+        let result = try await pipeline.process(item)     // back text, crop, rotation, metadata, ...
+        for side in result.saved {                        // skipped sides: result.picture?.skipReason
+            let name = "print_\(item.index + 1)\(side.side == .a ? "_back" : "").jpg"
+            try side.jpeg.write(to: folder.appendingPathComponent(name))
+        }
+    }
+}
+```
+
+Give `PrintPipeline` a `findDuplicate` closure (for example `DuplicateIndex.findDuplicate(ofJPEG:in:)` over the
+pictures already saved) to flag or skip prints scanned before. Nothing is written to disk by the pipeline.
+
+Or use the parts directly (no scanner needed):
 
 ```swift
 import PhastPhotoImaging
@@ -80,9 +106,6 @@ let metadata = PhotoMetadata(title: "Beach", date: "1974")
 let tagged = try PhotoMetadata.write(metadata, to: enhanced.data)     // lossless: no re-encode
 try PhotoOrientation.setRotation(rotation.degrees, in: tagged).write(to: outputURL)
 ```
-
-The order ffscan uses for each print (back text, crop, blank-back check, duplicates, enhancement, rotation,
-metadata) is in [docs/ROADMAP.md](docs/ROADMAP.md); a type that wires it together is the next roadmap item.
 
 Things worth knowing (details in [docs/PROTOCOL.md](docs/PROTOCOL.md)):
 

@@ -33,7 +33,7 @@ but checked only with injected inputs (plus Vision OCR of rendered text on macOS
 | Subnet probe, transport choice, watch | 7.1, 7.3, 7.4 | Done (`SubnetProbe`, `ScannerConnection`, `ScannerWatch`) |
 | USB on macOS | 7.2 | Code done (`USBTransport`, IOUSBHost); framing tested with fake pipes, never run on a scanner **[HW]** |
 | FastFoto import | 8.1 | Done (`FastFotoImport`) |
-| Per-print pipeline | 9.1 | Open: the parts exist, nothing wires them in the order below yet |
+| Per-print pipeline | 9.1 | Done (`PrintPipeline` in `PhastPhotoPipeline`); tested with synthetic prints and injected Vision results |
 
 ## Pipeline the packets add up to
 
@@ -301,6 +301,13 @@ any constant.
 filter, crop, blank-back and fast-mode checks, duplicate check, enhanced copy, rotation, metadata. It maps
 `SideMode`/`ScanSide` onto `BackPolicy`'s own side enums and `Eye` onto `EyePosition` (`Eye.position`).
 Tests: synthetic prints through the whole chain with injected Vision results.
+*Done:* `PrintPipeline` returns the files to save (nothing is written); Vision is behind `PrintAnalyzer`;
+duplicates go through a caller-supplied `findDuplicate` closure (`DuplicateIndex.findDuplicate(ofJPEG:in:)`).
+Differences from `process_page`, all deliberate: the back is cropped once and that crop reused for saving;
+back text is not read in back mode (upstream reads it but never uses it); a back whose OCR fails is kept and
+reported in `warnings` instead of failing the page; a duplicate lookup or eye-finding failure is a warning;
+ink and Vision run on the in-memory crop rather than the re-read JPEG file. AI analysis, uploads and file
+naming stay with the app.
 
 ## Later (not understood, or needs hardware we don't have)
 
