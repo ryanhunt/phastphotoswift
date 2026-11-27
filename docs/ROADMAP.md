@@ -34,6 +34,7 @@ but checked only with injected inputs (plus Vision OCR of rendered text on macOS
 | USB on macOS | 7.2 | Code done (`USBTransport`, IOUSBHost); framing tested with fake pipes, never run on a scanner **[HW]** |
 | FastFoto import | 8.1 | Done (`FastFotoImport`) |
 | Per-print pipeline | 9.1 | Done (`PrintPipeline` in `PhastPhotoPipeline`); tested with synthetic prints and injected Vision results |
+| CLI processing | 9.2 | Done: `scan --process` and `process` run `PrintPipeline` on live and saved raw scans |
 
 ## Pipeline the packets add up to
 
@@ -93,7 +94,7 @@ All pixel work is in stored orientation: never apply EXIF orientation before cro
 
 ## Phase 1: hardware check [HW]
 
-**1.1 Checklist with a real FF-680W**, using 0.5's CLI:
+**1.1 Checklist with a real FF-680W**, using 0.5's CLI (with `--process`, 9.2, to see crops and back text):
 - `status` with feeder empty, loaded, cover open.
 - Duplex scans at 300 and 600 dpi with deskew + DFL1.
 - Single-sided, face down.
@@ -308,6 +309,12 @@ back text is not read in back mode (upstream reads it but never uses it); a back
 reported in `warnings` instead of failing the page; a duplicate lookup or eye-finding failure is a warning;
 ink and Vision run on the in-memory crop rather than the re-read JPEG file. AI analysis, uploads and file
 naming stay with the app.
+
+**9.2 CLI processing.** `phastphoto scan --process` saves raw scans to `OUT/raw` inside the scan loop and runs
+the pipeline in a separate task (`ProcessingQueue`, `PrintFolder`); `phastphoto process` reruns it on saved raw
+scans, pairing backs and pictures by `RawSpool`'s file names. This is the tool for 1.1, 1.2, 2.6 and 5.3: scan
+once, then reprocess the raws with different settings. *Done;* checked end to end on synthetic raw scans with
+real Vision on macOS (back text read, blank backs dropped, a repeated print flagged).
 
 ## Later (not understood, or needs hardware we don't have)
 
