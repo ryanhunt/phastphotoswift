@@ -146,21 +146,40 @@ import Testing
         #expect(v == 42)
     }
 
-    @Test func givesUpOnSlowWorkWithoutWaitingForIt() async {
-        let start = Date()
-        await #expect(throws: VisionError.timedOut(seconds: 0.2)) {
-            try await withVisionTimeout(seconds: 0.2) { Thread.sleep(forTimeInterval: 2); return 1 }
+    /// Stand-in for a Vision call that won't return: it blocks until the test releases it (or 10 s pass).
+    /// The checks below are "the work was still blocked when we got control back", not wall-clock times:
+    /// when other tests in the process hold every cooperative thread (CI runners have 3 cores), resuming
+    /// after the timeout can take seconds even though the timer fired on time.
+    final class StuckWork: @unchecked Sendable {
+        private let gate = DispatchSemaphore(value: 0)
+        private let lock = NSLock()
+        private var _finished = false
+        var finished: Bool { lock.withLock { _finished } }
+        func run() -> Int {
+            _ = gate.wait(timeout: .now() + 10)
+            lock.withLock { _finished = true }
+            return 1
         }
-        #expect(Date().timeIntervalSince(start) < 1.5)
+        func release() { gate.signal() }
     }
 
-    @Test func cancellationThrowsPromptly() async {
-        let task = Task { try await withVisionTimeout(seconds: 30) { Thread.sleep(forTimeInterval: 2); return 1 } }
+    @Test func givesUpOnSlowWorkWithoutWaitingForIt() async {
+        let work = StuckWork()
+        await #expect(throws: VisionError.timedOut(seconds: 0.2)) {
+            try await withVisionTimeout(seconds: 0.2) { work.run() }
+        }
+        #expect(!work.finished, "returned only after the work finished")
+        work.release()
+    }
+
+    @Test func cancellationThrowsWithoutWaitingForTheWork() async {
+        let work = StuckWork()
+        let task = Task { try await withVisionTimeout(seconds: 30) { work.run() } }
         try? await Task.sleep(nanoseconds: 100_000_000)
         task.cancel()
-        let start = Date()
         let r = await task.result
-        #expect(Date().timeIntervalSince(start) < 1.5)
+        #expect(!work.finished, "returned only after the work finished")
+        work.release()
         if case .failure(let e) = r { #expect(e is CancellationError) } else { Issue.record("should have thrown") }
     }
 
