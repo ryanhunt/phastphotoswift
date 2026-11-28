@@ -32,6 +32,27 @@ final class HarnessModel {
         case failed(String)
     }
 
+    /// How to reach the scanner.
+    enum Connection: String, CaseIterable, Identifiable {
+        case wifi = "Wi-Fi", usb = "USB"
+        var id: String { rawValue }
+    }
+
+    /// Wi-Fi by default; USB is offered when this build embeds the driver (the "PhastPhotoHarness USB" target).
+    var connection: Connection = .wifi
+    /// Whether the driver answers for a plugged-in scanner (enabled in Settings and the scanner attached).
+    private(set) var usbPresent = false
+
+    /// The embedded driver's bundle ID: the app's plus ".Driver", the convention in Drivers/PhastPhotoUSBDriver.
+    static var driverBundleID: String? { Bundle.main.bundleIdentifier.map { $0 + ".Driver" } }
+
+    /// True when the app carries a driver extension (only the USB target does).
+    static let embedsUSBDriver: Bool = {
+        let folder = Bundle.main.bundleURL.appendingPathComponent("SystemExtensions")
+        let items = (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? []
+        return items.contains { $0.hasSuffix(".dext") }
+    }()
+
     // Discovery
     var discovery: DiscoveryState = .idle
     var scanners: [DiscoveredScanner] = []
@@ -74,7 +95,8 @@ final class HarnessModel {
     #endif
 
     init() {
-        log("launched: \(Self.deviceDescription), \(Self.buildConfiguration) build")
+        log("launched: \(Self.deviceDescription), \(Self.buildConfiguration) build"
+            + (Self.embedsUSBDriver ? ", with the USB driver" : ""))
         if Self.buildConfiguration == "Debug" {
             log("note: Debug builds run the imaging loops about 200 times slower; measure with Release")
         }
@@ -155,14 +177,32 @@ final class HarnessModel {
         var errorDescription: String? { "Find a scanner first, or type its address." }
     }
 
-    private func makeTransport() throws -> NetworkTransport {
+    private struct NoUSBScanner: LocalizedError {
+        var errorDescription: String? { ScannerConnection.noUSBMessage }
+    }
+
+    private func makeTransport() throws -> any ScannerTransport {
+        if connection == .usb {
+            refreshUSB()
+            guard usbPresent else { throw NoUSBScanner() }
+            return USBTransport(driverBundleID: Self.driverBundleID)
+        }
         let host = manualHost.trimmingCharacters(in: .whitespacesAndNewlines)
         if !host.isEmpty { return NetworkTransport(host: host) }
         guard let selected else { throw NoTarget() }
         return NetworkTransport(endpoint: selected.endpoint)
     }
 
+    /// Asks IOKit whether the driver is running for an attached scanner. Cheap; called before each USB session
+    /// and from the USB row's button.
+    func refreshUSB() {
+        let present = USBTransport.isScannerPresent(driverBundleID: Self.driverBundleID)
+        if present != usbPresent { log(present ? "USB: scanner driver found" : "USB: no scanner driver running") }
+        usbPresent = present
+    }
+
     private var targetName: String {
+        if connection == .usb { return "the scanner over USB" }
         let host = manualHost.trimmingCharacters(in: .whitespacesAndNewlines)
         return host.isEmpty ? (selected?.name ?? "?") : host
     }
@@ -188,7 +228,7 @@ final class HarnessModel {
 
     private func query(_ name: String, _ body: @escaping (ScannerSession) async throws -> Void) {
         guard !isBusy else { return }
-        let transport: NetworkTransport
+        let transport: any ScannerTransport
         do { transport = try makeTransport() } catch { log("\(name): \(error.localizedDescription)"); return }
         queryRunning = name
         log("\(name): connecting to \(targetName)")
@@ -221,7 +261,7 @@ final class HarnessModel {
     /// processed on another task.
     func startScan() {
         guard !isBusy else { return }
-        let transport: NetworkTransport
+        let transport: any ScannerTransport
         do { transport = try makeTransport() } catch { log("scan: \(error.localizedDescription)"); return }
         let mode = sideMode, dpi = dpi
         let settings: ScanSettings = {

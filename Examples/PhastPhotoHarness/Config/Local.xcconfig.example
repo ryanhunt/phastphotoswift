@@ -3,3 +3,6 @@
 
 DEVELOPMENT_TEAM = ABCDE12345
 HARNESS_BUNDLE_ID = com.yourname.phastphoto-harness
+// Only for the "PhastPhotoHarness USB" scheme, which needs a paid team. You can reuse an App ID that already has
+// the DriverKit capability, such as the USB test host's from Drivers/PhastPhotoUSBDriver.
+// HARNESS_USB_BUNDLE_ID = com.yourcompany.phastphoto.USBHost

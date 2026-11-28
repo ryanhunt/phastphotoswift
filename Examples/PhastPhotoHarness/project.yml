@@ -64,6 +64,66 @@ targets:
         product: PhastPhotoPipeline
       - package: PhastPhoto
         product: PhastPhotoProtocol
+  # The same app with the USB driver embedded, for M-series iPads. Needs a paid team (DriverKit) and, once, a build
+  # in Xcode's GUI to create the DriverKit profiles. HARNESS_USB_BUNDLE_ID in Local.xcconfig.
+  PhastPhotoHarnessUSB:
+    type: application
+    platform: iOS
+    sources:
+      - PhastPhotoHarness
+      - path: ../../Drivers/PhastPhotoUSBDriver/TestHost/Settings.bundle
+        buildPhase: resources
+    configFiles:
+      Debug: Config/Harness.xcconfig
+      Release: Config/Harness.xcconfig
+    settings:
+      base:
+        TARGETED_DEVICE_FAMILY: "2"
+        CODE_SIGN_STYLE: Automatic
+        PRODUCT_BUNDLE_IDENTIFIER: $(HARNESS_USB_BUNDLE_ID)
+        PRODUCT_NAME: PhastPhoto Harness USB
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: PhastPhotoHarness/Info.plist
+        CODE_SIGN_ENTITLEMENTS: PhastPhotoHarnessUSB.entitlements
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+    dependencies:
+      - package: PhastPhoto
+        product: PhastPhotoScanner
+      - package: PhastPhoto
+        product: PhastPhotoImaging
+      - package: PhastPhoto
+        product: PhastPhotoVision
+      - package: PhastPhoto
+        product: PhastPhotoPipeline
+      - package: PhastPhoto
+        product: PhastPhotoProtocol
+      - target: PhastPhotoUSBDriver
+        embed: true
+        codeSign: true
+  # Drivers/PhastPhotoUSBDriver's driver, built here under the USB app's bundle ID (the app finds "<app ID>.Driver").
+  PhastPhotoUSBDriver:
+    type: driver-extension
+    platform: macOS
+    sources:
+      - path: ../../Drivers/PhastPhotoUSBDriver/PhastPhotoUSBDriver
+    configFiles:
+      Debug: Config/Harness.xcconfig
+      Release: Config/Harness.xcconfig
+    settings:
+      base:
+        SDKROOT: driverkit
+        SUPPORTED_PLATFORMS: driverkit
+        DRIVERKIT_DEPLOYMENT_TARGET: "22.0"
+        CODE_SIGN_STYLE: Automatic
+        PRODUCT_BUNDLE_IDENTIFIER: $(HARNESS_USB_BUNDLE_ID).Driver
+        PRODUCT_NAME: PhastPhotoUSBDriver
+        INFOPLIST_FILE: ../../Drivers/PhastPhotoUSBDriver/PhastPhotoUSBDriver/Info.plist
+        CODE_SIGN_ENTITLEMENTS: ../../Drivers/PhastPhotoUSBDriver/PhastPhotoUSBDriver/PhastPhotoUSBDriver.entitlements
+        HEADER_SEARCH_PATHS: $(SRCROOT)/../../Sources/CPhastPhotoDriverKit/include
+        CLANG_CXX_LANGUAGE_STANDARD: gnu++20
+        OTHER_LDFLAGS: [-framework, USBDriverKit]
+        GCC_TREAT_WARNINGS_AS_ERRORS: YES
 schemes:
   PhastPhotoHarness:
     build:
@@ -72,6 +132,14 @@ schemes:
     run:
       # Release by default: per-pixel imaging loops are about 200 times slower in Debug, so Debug timings
       # say nothing about a device. Switch to Debug in the scheme to step through code.
+      config: Release
+    archive:
+      config: Release
+  PhastPhotoHarnessUSB:
+    build:
+      targets:
+        PhastPhotoHarnessUSB: all
+    run:
       config: Release
     archive:
       config: Release

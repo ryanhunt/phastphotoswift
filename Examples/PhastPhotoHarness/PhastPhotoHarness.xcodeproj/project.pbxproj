@@ -8,36 +8,100 @@
 
 /* Begin PBXBuildFile section */
 		0019323062B582A997DBBEB7 /* PhastPhotoVision in Frameworks */ = {isa = PBXBuildFile; productRef = 8F9C9B4B3408568358BB68E9 /* PhastPhotoVision */; };
+		24FFF9992B8C46C35A0A393D /* PhastPhotoScanner in Frameworks */ = {isa = PBXBuildFile; productRef = 65CA92D359FCA421354463F0 /* PhastPhotoScanner */; };
+		30669523715ADB19D17FED76 /* PhastPhotoPipeline in Frameworks */ = {isa = PBXBuildFile; productRef = C8703135567B2A6EE1E97976 /* PhastPhotoPipeline */; };
 		3417104F5B9A9C5DA857D77A /* MemoryMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC12800A05FE30E3356BED4 /* MemoryMeter.swift */; };
 		410554DAF098298C71936B47 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA59CC4694B19A922B5AEFAD /* ContentView.swift */; };
 		492897B01A6E31A540DD38D6 /* SampleScans.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580D1240EE0235A2252A4244 /* SampleScans.swift */; };
+		493ECCB1C199484C9135FFE5 /* PhastPhotoUSBUserClient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D56056BBAB2B9D487A3F1F65 /* PhastPhotoUSBUserClient.cpp */; };
+		5820659DD7B81A4A2297714C /* PrintDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4954180F7D416257B0085701 /* PrintDetailView.swift */; };
 		5F9D62A4DF29CDA3CD7AFD49 /* HarnessApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9140961206F95C3063201972 /* HarnessApp.swift */; };
+		61B2134DFF371E127D44B70B /* PrintProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DCDBEC65C836ACAEB0E45E3 /* PrintProcessor.swift */; };
 		63EE68D997791F3FB85E4A02 /* PhastPhotoPipeline in Frameworks */ = {isa = PBXBuildFile; productRef = 8B1707DEBB868F9A35F6C5BE /* PhastPhotoPipeline */; };
+		6AA0C7DAC1F9B29B70330ABE /* HarnessModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 313F284C37D5D2283440C00F /* HarnessModel.swift */; };
+		74544E986880508AEE4523A8 /* PhastPhotoUSBDriver.iig in Sources */ = {isa = PBXBuildFile; fileRef = 0CC21CE0A37233E598A4E5F6 /* PhastPhotoUSBDriver.iig */; };
+		78D144EB707D528EFCFF23FB /* PhastPhotoVision in Frameworks */ = {isa = PBXBuildFile; productRef = 049A7927950C255370052B43 /* PhastPhotoVision */; };
+		7D9DB70B294417BD638CC759 /* MemoryMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC12800A05FE30E3356BED4 /* MemoryMeter.swift */; };
 		8727AD3EBD8E8B1B1D3282EB /* PrintDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4954180F7D416257B0085701 /* PrintDetailView.swift */; };
 		95A03D9AE18F3F12D22B6012 /* PhastPhotoImaging in Frameworks */ = {isa = PBXBuildFile; productRef = 71CE3C0C1A04BBFD3744596A /* PhastPhotoImaging */; };
+		99A85D6078C5B9227F728B1F /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = C46BA8F8B2381519EC92F004 /* Settings.bundle */; };
+		99E766C3ABE737F44FC43555 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3168F896D7E1D5CAB5C9EDC /* Storage.swift */; };
+		ABB80232DF77A9097123ED6B /* PhastPhotoUSBUserClient.iig in Sources */ = {isa = PBXBuildFile; fileRef = 718301DCF12ADD8A805C467F /* PhastPhotoUSBUserClient.iig */; };
+		B40D06472CC10700E21DBBD0 /* PhastPhotoUSBDriver.dext in Embed System Extensions */ = {isa = PBXBuildFile; fileRef = 0A70EEDE088EA614E5D885DA /* PhastPhotoUSBDriver.dext */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		B4E88C7203E886CFC204F727 /* PhastPhotoUSBDriver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 13C62CAD153CA776BB9990C0 /* PhastPhotoUSBDriver.cpp */; };
+		B6D2B32955153F39043E1E9D /* SampleScans.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580D1240EE0235A2252A4244 /* SampleScans.swift */; };
+		C04D67D65C17B84EF4EC772D /* PhastPhotoImaging in Frameworks */ = {isa = PBXBuildFile; productRef = FD1ABBE1A9C74D5B41099DB2 /* PhastPhotoImaging */; };
 		C51872564CAD2BE9B26A65C1 /* PhastPhotoScanner in Frameworks */ = {isa = PBXBuildFile; productRef = 994E993418E93D578D10FF8F /* PhastPhotoScanner */; };
+		C8D3DC5AD1533D1C865FC1F7 /* HarnessApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9140961206F95C3063201972 /* HarnessApp.swift */; };
+		CC2788444292FA9B8E8C0CEA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA59CC4694B19A922B5AEFAD /* ContentView.swift */; };
 		CCA9D20DF37059BC6B209575 /* PhastPhotoProtocol in Frameworks */ = {isa = PBXBuildFile; productRef = 27E6395EACAE47C53EF8B87A /* PhastPhotoProtocol */; };
+		CFC088FAAE6C6E1AD4FB5920 /* PhastPhotoProtocol in Frameworks */ = {isa = PBXBuildFile; productRef = 1C71CE2FEBFA87431D54ABE7 /* PhastPhotoProtocol */; };
 		D6E0239B71829A050A6089A7 /* HarnessModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 313F284C37D5D2283440C00F /* HarnessModel.swift */; };
 		E1F20C110D6D5ABF28A13BEC /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3168F896D7E1D5CAB5C9EDC /* Storage.swift */; };
 		FEF326829511B5E7F7D60BFB /* PrintProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DCDBEC65C836ACAEB0E45E3 /* PrintProcessor.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		BC8EF05D558CDCBDB6173645 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 158D8CC3F419CC83C16E4F39 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2507BF6C8B620ABD191A5558;
+			remoteInfo = PhastPhotoUSBDriver;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3744D578CD5926C6656F872E /* Embed System Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(SYSTEM_EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				B40D06472CC10700E21DBBD0 /* PhastPhotoUSBDriver.dext in Embed System Extensions */,
+			);
+			name = "Embed System Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		0A70EEDE088EA614E5D885DA /* PhastPhotoUSBDriver.dext */ = {isa = PBXFileReference; explicitFileType = "wrapper.driver-extension"; includeInIndex = 0; path = PhastPhotoUSBDriver.dext; sourceTree = BUILT_PRODUCTS_DIR; };
+		0CC21CE0A37233E598A4E5F6 /* PhastPhotoUSBDriver.iig */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.iig; path = PhastPhotoUSBDriver.iig; sourceTree = "<group>"; };
+		13C62CAD153CA776BB9990C0 /* PhastPhotoUSBDriver.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PhastPhotoUSBDriver.cpp; sourceTree = "<group>"; };
+		266084363FCC6B8F2876A62C /* phastphotoswift */ = {isa = PBXFileReference; lastKnownFileType = folder; name = phastphotoswift; path = ../..; sourceTree = SOURCE_ROOT; };
 		313F284C37D5D2283440C00F /* HarnessModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessModel.swift; sourceTree = "<group>"; };
 		4954180F7D416257B0085701 /* PrintDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintDetailView.swift; sourceTree = "<group>"; };
 		580D1240EE0235A2252A4244 /* SampleScans.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleScans.swift; sourceTree = "<group>"; };
 		6DCDBEC65C836ACAEB0E45E3 /* PrintProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintProcessor.swift; sourceTree = "<group>"; };
+		718301DCF12ADD8A805C467F /* PhastPhotoUSBUserClient.iig */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.iig; path = PhastPhotoUSBUserClient.iig; sourceTree = "<group>"; };
+		71E0A6BFB6091955EA9C5F23 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		7AC6A244077CFF7AC8DF298C /* PhastPhotoUSBDriver.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PhastPhotoUSBDriver.entitlements; sourceTree = "<group>"; };
 		7CCE6C99765936DAE0AC652A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		9140961206F95C3063201972 /* HarnessApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessApp.swift; sourceTree = "<group>"; };
-		96FEA3FBB36B4864D8A9902C /* serene-wilson-5bac43 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "serene-wilson-5bac43"; path = ../..; sourceTree = SOURCE_ROOT; };
 		A3168F896D7E1D5CAB5C9EDC /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
+		C46BA8F8B2381519EC92F004 /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = wrapper.cfbundle; path = Settings.bundle; sourceTree = "<group>"; };
+		D56056BBAB2B9D487A3F1F65 /* PhastPhotoUSBUserClient.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PhastPhotoUSBUserClient.cpp; sourceTree = "<group>"; };
 		D7E81C4C881E49EE05706F6F /* Harness.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Harness.xcconfig; sourceTree = "<group>"; };
+		DAA1C9BACC403ED5155A9047 /* PhastPhotoHarnessUSB.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PhastPhotoHarnessUSB.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDC12800A05FE30E3356BED4 /* MemoryMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryMeter.swift; sourceTree = "<group>"; };
 		F3FE87ED968BA7212AA6BFFC /* PhastPhotoHarness.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PhastPhotoHarness.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA59CC4694B19A922B5AEFAD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		BF63D58DAE74FA2DD7D08C64 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				24FFF9992B8C46C35A0A393D /* PhastPhotoScanner in Frameworks */,
+				C04D67D65C17B84EF4EC772D /* PhastPhotoImaging in Frameworks */,
+				78D144EB707D528EFCFF23FB /* PhastPhotoVision in Frameworks */,
+				30669523715ADB19D17FED76 /* PhastPhotoPipeline in Frameworks */,
+				CFC088FAAE6C6E1AD4FB5920 /* PhastPhotoProtocol in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C9450B76C737166CA0D6A6A3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -53,6 +117,28 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		47F3D7A70327929039C011D2 /* PhastPhotoUSBDriver */ = {
+			isa = PBXGroup;
+			children = (
+				71E0A6BFB6091955EA9C5F23 /* Info.plist */,
+				13C62CAD153CA776BB9990C0 /* PhastPhotoUSBDriver.cpp */,
+				7AC6A244077CFF7AC8DF298C /* PhastPhotoUSBDriver.entitlements */,
+				0CC21CE0A37233E598A4E5F6 /* PhastPhotoUSBDriver.iig */,
+				D56056BBAB2B9D487A3F1F65 /* PhastPhotoUSBUserClient.cpp */,
+				718301DCF12ADD8A805C467F /* PhastPhotoUSBUserClient.iig */,
+			);
+			path = PhastPhotoUSBDriver;
+			sourceTree = "<group>";
+		};
+		490AA2320DD2784B7F91A5DE /* PhastPhotoUSBDriver */ = {
+			isa = PBXGroup;
+			children = (
+				47F3D7A70327929039C011D2 /* PhastPhotoUSBDriver */,
+				6F4968A5FD01422A187E6355 /* TestHost */,
+			);
+			path = PhastPhotoUSBDriver;
+			sourceTree = "<group>";
+		};
 		62F55EAAFB927A42C506BC4A /* PhastPhotoHarness */ = {
 			isa = PBXGroup;
 			children = (
@@ -69,10 +155,28 @@
 			path = PhastPhotoHarness;
 			sourceTree = "<group>";
 		};
+		6C0FDC07A9F54DDA12E1989C /* Drivers */ = {
+			isa = PBXGroup;
+			children = (
+				490AA2320DD2784B7F91A5DE /* PhastPhotoUSBDriver */,
+			);
+			path = Drivers;
+			sourceTree = "<group>";
+		};
+		6F4968A5FD01422A187E6355 /* TestHost */ = {
+			isa = PBXGroup;
+			children = (
+				C46BA8F8B2381519EC92F004 /* Settings.bundle */,
+			);
+			path = TestHost;
+			sourceTree = "<group>";
+		};
 		952C72296A035BBF66CC81B5 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				F3FE87ED968BA7212AA6BFFC /* PhastPhotoHarness.app */,
+				DAA1C9BACC403ED5155A9047 /* PhastPhotoHarnessUSB.app */,
+				0A70EEDE088EA614E5D885DA /* PhastPhotoUSBDriver.dext */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -88,9 +192,18 @@
 		C2DA40268E1430F7293A5DB0 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
-				96FEA3FBB36B4864D8A9902C /* serene-wilson-5bac43 */,
+				266084363FCC6B8F2876A62C /* phastphotoswift */,
 			);
 			name = Packages;
+			sourceTree = "<group>";
+		};
+		F238F3CCA4B9CE9B24AB7093 /* phastphotoswift */ = {
+			isa = PBXGroup;
+			children = (
+				6C0FDC07A9F54DDA12E1989C /* Drivers */,
+			);
+			name = phastphotoswift;
+			path = ../..;
 			sourceTree = "<group>";
 		};
 		FB5FB5B16FB657EB1D264BF1 = {
@@ -99,6 +212,7 @@
 				B1F18F2D596B7859A01DA146 /* Config */,
 				C2DA40268E1430F7293A5DB0 /* Packages */,
 				62F55EAAFB927A42C506BC4A /* PhastPhotoHarness */,
+				F238F3CCA4B9CE9B24AB7093 /* phastphotoswift */,
 				952C72296A035BBF66CC81B5 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -106,6 +220,49 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		012FA0777F9C839AC614CE4C /* PhastPhotoHarnessUSB */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 912C2523EE423C524EA5E6A2 /* Build configuration list for PBXNativeTarget "PhastPhotoHarnessUSB" */;
+			buildPhases = (
+				52C434DB4C1B7ECBAAA6DAB3 /* Sources */,
+				25DF6E305E0DC9033ABDA95A /* Resources */,
+				BF63D58DAE74FA2DD7D08C64 /* Frameworks */,
+				3744D578CD5926C6656F872E /* Embed System Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AEA9DAFF0499E39146C8422B /* PBXTargetDependency */,
+			);
+			name = PhastPhotoHarnessUSB;
+			packageProductDependencies = (
+				65CA92D359FCA421354463F0 /* PhastPhotoScanner */,
+				FD1ABBE1A9C74D5B41099DB2 /* PhastPhotoImaging */,
+				049A7927950C255370052B43 /* PhastPhotoVision */,
+				C8703135567B2A6EE1E97976 /* PhastPhotoPipeline */,
+				1C71CE2FEBFA87431D54ABE7 /* PhastPhotoProtocol */,
+			);
+			productName = PhastPhotoHarnessUSB;
+			productReference = DAA1C9BACC403ED5155A9047 /* PhastPhotoHarnessUSB.app */;
+			productType = "com.apple.product-type.application";
+		};
+		2507BF6C8B620ABD191A5558 /* PhastPhotoUSBDriver */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BEF499D47F6FA9A41C7CEDCE /* Build configuration list for PBXNativeTarget "PhastPhotoUSBDriver" */;
+			buildPhases = (
+				2B3B2C15E3F0B1B312E55065 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PhastPhotoUSBDriver;
+			packageProductDependencies = (
+			);
+			productName = PhastPhotoUSBDriver;
+			productReference = 0A70EEDE088EA614E5D885DA /* PhastPhotoUSBDriver.dext */;
+			productType = "com.apple.product-type.driver-extension";
+		};
 		2A6724E2CAD6E3C31C7746DF /* PhastPhotoHarness */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 55F628974660BC6EE238EDFE /* Build configuration list for PBXNativeTarget "PhastPhotoHarness" */;
@@ -138,6 +295,14 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+					012FA0777F9C839AC614CE4C = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					2507BF6C8B620ABD191A5558 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
 					2A6724E2CAD6E3C31C7746DF = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
@@ -162,9 +327,22 @@
 			projectRoot = "";
 			targets = (
 				2A6724E2CAD6E3C31C7746DF /* PhastPhotoHarness */,
+				012FA0777F9C839AC614CE4C /* PhastPhotoHarnessUSB */,
+				2507BF6C8B620ABD191A5558 /* PhastPhotoUSBDriver */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		25DF6E305E0DC9033ABDA95A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				99A85D6078C5B9227F728B1F /* Settings.bundle in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		2A227300F214DF870DA914A9 /* Sources */ = {
@@ -182,7 +360,41 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2B3B2C15E3F0B1B312E55065 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4E88C7203E886CFC204F727 /* PhastPhotoUSBDriver.cpp in Sources */,
+				74544E986880508AEE4523A8 /* PhastPhotoUSBDriver.iig in Sources */,
+				493ECCB1C199484C9135FFE5 /* PhastPhotoUSBUserClient.cpp in Sources */,
+				ABB80232DF77A9097123ED6B /* PhastPhotoUSBUserClient.iig in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		52C434DB4C1B7ECBAAA6DAB3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC2788444292FA9B8E8C0CEA /* ContentView.swift in Sources */,
+				C8D3DC5AD1533D1C865FC1F7 /* HarnessApp.swift in Sources */,
+				6AA0C7DAC1F9B29B70330ABE /* HarnessModel.swift in Sources */,
+				7D9DB70B294417BD638CC759 /* MemoryMeter.swift in Sources */,
+				5820659DD7B81A4A2297714C /* PrintDetailView.swift in Sources */,
+				61B2134DFF371E127D44B70B /* PrintProcessor.swift in Sources */,
+				B6D2B32955153F39043E1E9D /* SampleScans.swift in Sources */,
+				99E766C3ABE737F44FC43555 /* Storage.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AEA9DAFF0499E39146C8422B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2507BF6C8B620ABD191A5558 /* PhastPhotoUSBDriver */;
+			targetProxy = BC8EF05D558CDCBDB6173645 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		1CD165E07D6E5A74236B1731 /* Debug */ = {
@@ -241,7 +453,6 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -298,11 +509,37 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		4F750C3A7BA4265920046F9E /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D7E81C4C881E49EE05706F6F /* Harness.xcconfig */;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_ENTITLEMENTS = ../../Drivers/PhastPhotoUSBDriver/PhastPhotoUSBDriver/PhastPhotoUSBDriver.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DRIVERKIT_DEPLOYMENT_TARGET = 22.0;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../Sources/CPhastPhotoDriverKit/include";
+				INFOPLIST_FILE = ../../Drivers/PhastPhotoUSBDriver/PhastPhotoUSBDriver/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					USBDriverKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(HARNESS_USB_BUNDLE_ID).Driver";
+				PRODUCT_NAME = PhastPhotoUSBDriver;
+				SDKROOT = driverkit;
+				SUPPORTED_PLATFORMS = driverkit;
 			};
 			name = Release;
 		};
@@ -327,6 +564,33 @@
 			};
 			name = Debug;
 		};
+		A0A07EC261F0E53EA817F8EB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D7E81C4C881E49EE05706F6F /* Harness.xcconfig */;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_ENTITLEMENTS = ../../Drivers/PhastPhotoUSBDriver/PhastPhotoUSBDriver/PhastPhotoUSBDriver.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DRIVERKIT_DEPLOYMENT_TARGET = 22.0;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../Sources/CPhastPhotoDriverKit/include";
+				INFOPLIST_FILE = ../../Drivers/PhastPhotoUSBDriver/PhastPhotoUSBDriver/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					USBDriverKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(HARNESS_USB_BUNDLE_ID).Driver";
+				PRODUCT_NAME = PhastPhotoUSBDriver;
+				SDKROOT = driverkit;
+				SUPPORTED_PLATFORMS = driverkit;
+			};
+			name = Debug;
+		};
 		C02759987E8D0ABC07111721 /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D7E81C4C881E49EE05706F6F /* Harness.xcconfig */;
@@ -348,6 +612,52 @@
 			};
 			name = Release;
 		};
+		CCF780C2F2C2946AB3CA590B /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D7E81C4C881E49EE05706F6F /* Harness.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = PhastPhotoHarnessUSB.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PhastPhotoHarness/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(HARNESS_USB_BUNDLE_ID)";
+				PRODUCT_NAME = "PhastPhoto Harness USB";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Release;
+		};
+		E07895D11C8A4AA930C8847D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D7E81C4C881E49EE05706F6F /* Harness.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = PhastPhotoHarnessUSB.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PhastPhotoHarness/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(HARNESS_USB_BUNDLE_ID)";
+				PRODUCT_NAME = "PhastPhoto Harness USB";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -356,6 +666,24 @@
 			buildConfigurations = (
 				9E139E77E9FB0A1FE7273E42 /* Debug */,
 				C02759987E8D0ABC07111721 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		912C2523EE423C524EA5E6A2 /* Build configuration list for PBXNativeTarget "PhastPhotoHarnessUSB" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E07895D11C8A4AA930C8847D /* Debug */,
+				CCF780C2F2C2946AB3CA590B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BEF499D47F6FA9A41C7CEDCE /* Build configuration list for PBXNativeTarget "PhastPhotoUSBDriver" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A0A07EC261F0E53EA817F8EB /* Debug */,
+				4F750C3A7BA4265920046F9E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
@@ -379,9 +707,21 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		049A7927950C255370052B43 /* PhastPhotoVision */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PhastPhotoVision;
+		};
+		1C71CE2FEBFA87431D54ABE7 /* PhastPhotoProtocol */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PhastPhotoProtocol;
+		};
 		27E6395EACAE47C53EF8B87A /* PhastPhotoProtocol */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = PhastPhotoProtocol;
+		};
+		65CA92D359FCA421354463F0 /* PhastPhotoScanner */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PhastPhotoScanner;
 		};
 		71CE3C0C1A04BBFD3744596A /* PhastPhotoImaging */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -398,6 +738,14 @@
 		994E993418E93D578D10FF8F /* PhastPhotoScanner */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = PhastPhotoScanner;
+		};
+		C8703135567B2A6EE1E97976 /* PhastPhotoPipeline */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PhastPhotoPipeline;
+		};
+		FD1ABBE1A9C74D5B41099DB2 /* PhastPhotoImaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PhastPhotoImaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
