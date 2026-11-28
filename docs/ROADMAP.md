@@ -12,11 +12,12 @@ no photos are committed). Port the code, not the docstrings: two upstream docstr
 
 ## Status
 
-First hardware runs on 27 November 2026 (firmware 18.60.SP14P2): `INFO`, `STATUS`, single-sided and duplex scans
-over Wi-Fi (Mac) and USB (M1 iPad Pro, 7.5), and paper-end detection with hardware crop on an A4 print and two
-receipts (1.1). The rest of the **[HW]** checklist is open, no processing step (crop, back OCR, rotation,
-duplicates) has run on a real scan yet, and **[Device]** code is checked only with injected inputs (plus Vision
-OCR of rendered text on macOS).
+First hardware runs on 27–28 November 2026 (firmware 18.60.SP14P2): `INFO`, `STATUS`, single-sided and duplex scans
+over Wi-Fi (Mac) and USB (M1 iPad Pro, 7.5); paper-end detection with hardware crop on an A4 print, two receipts
+and four 6×4 prints (1.1); and a first processing run on those four prints (Mac, `scan --process --enhance`, see
+1.1). Still open: most of the **[HW]** checklist (600 dpi, large stacks, cancel, an iPhone, USB from a Mac), the
+raw corpus, software crop on real scans, duplicates on real rescans, and judging enhancement and red-eye on real
+photos. **[Device]** code has run on the Mac's Vision only.
 
 | Area | Packets | Status |
 |---|---|---|
@@ -28,7 +29,7 @@ OCR of rendered text on macOS).
 | Back text, back policy, print assembly | 3.1, 3.3, 3.4 | Done (`BackText`, `BackPolicy`, `PrintAssembler`) |
 | Back OCR | 3.2, 3.5 | Code done (`BackReader`, `PenInk`); one real handwritten back read (28 Nov 2026), more needed **[Device]** |
 | Orientation tag, metadata | 4.1, 4.4 | Done (`PhotoOrientation`, `PhotoMetadata`, lossless) |
-| Face roll, scene fallback | 4.2, 4.3 | Code done (`AutoRotation`); real photos unverified **[Device]** |
+| Face roll, scene fallback | 4.2, 4.3 | Code done (`AutoRotation`); four real prints (28 Nov 2026), more needed **[Device]** |
 | Duplicates | 5.1, 5.2 | Done (`Duplicates`, `DuplicateIndex`) |
 | Threshold on real rescans | 5.3 | Open **[HW]** |
 | Enhancement | 6.1, 6.3–6.5 | Done (`removingRedEye`, `restoredFaded`, `autoEnhanced`, `adjusted`, `enhancedCopy`) |
@@ -124,6 +125,12 @@ USB; single-sided and duplex scans complete. With `PEDT` alone every page was 36
 at 300 dpi, the `#ACQ` maximum) and a stack stopped after its first print, over USB, over Wi-Fi and with
 ffscan's own code. Fixed by sending `CRP ` with `PEDT` (above): an A4 print came back 8.3 × 11.75 in, and two
 receipts one page each.
+
+**First processing run (28 November 2026, Mac, Wi-Fi, 300 dpi, `scan --sides both --process --enhance`):** four
+6×4 prints of people, 48 s for the stack. The scanner feeds the bottom of the stack first. Hardware crop cut each
+side to 6 × 4 in. Three backs with only the paper maker's pattern and a lab code were skipped (ink 0.000), and so was
+a back with one handwritten word until 3.5 kept it. Rotation: the upright prints 0°, the upside-down print 180°,
+the sideways landscape 270° (direction not yet checked by eye). Red-eye checked 2–10 eyes per print.
 
 **1.2 Private raw corpus** (git-ignored `scans/`), for phases 2–6:
 - 300 and 600 dpi, deskew on and off;
