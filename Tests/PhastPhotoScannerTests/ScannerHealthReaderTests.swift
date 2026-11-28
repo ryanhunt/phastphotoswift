@@ -109,7 +109,9 @@ private actor EndlessAgent: SNMPExchanging {
         let client = SNMPClient(host: "127.0.0.1", port: port, community: "public", timeout: .milliseconds(200))
         await #expect(throws: ScannerError.self) { try await client.exchange(.getNextRequest, oids: ["1.3.6.1"]) }
         await client.close()
-        #expect(agent.received == 2)  // sent twice: the retry
+        // sent twice (the retry). The agent may still be catching up on a slow simulator: wait for its count.
+        for _ in 0 ..< 200 where agent.received < 2 { try await Task.sleep(for: .milliseconds(50)) }
+        #expect(agent.received == 2)
     }
 }
 
