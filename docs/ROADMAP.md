@@ -35,7 +35,7 @@ photos. **[Device]** code has run on the Mac's Vision only.
 | Enhancement | 6.1, 6.3–6.5 | Done (`removingRedEye`, `restoredFaded`, `autoEnhanced`, `adjusted`, `enhancedCopy`) |
 | Eye finder | 6.2 | Code done (`EyeFinder`); real flash photos unverified **[Device]** |
 | Subnet probe, transport choice, watch | 7.1, 7.3, 7.4 | Done (`SubnetProbe`, `ScannerConnection`, `ScannerWatch`) |
-| Scanner health over SNMP | PLAN 11.1–11.3 | Done (`SNMP`, `ScannerHealth`, `ScannerHealthReader`, CLI `health`); read on a real FF-680W; labelling the counters (11.4) open **[HW]** |
+| Scanner health over SNMP | PLAN 11.1–11.3 | Done (`SNMP`, `ScannerHealth`, `ScannerHealthReader`, CLI `health`); read on a real FF-680W; counters and timers labelled at the scanner (11.4) |
 | USB on macOS | 7.2 | Code done (`USBTransport`, IOUSBHost); framing tested with fake pipes, never run on a scanner **[HW]** |
 | USB on iPadOS | 7.5 | Works on an iPad Pro M1 (iPadOS 27.2.1): `INFO`, `STATUS`, single-sided and duplex scans over USB; 600 dpi, stacks, timeouts and reset not yet tried **[HW]** |
 | FastFoto import | 8.1 | Done (`FastFotoImport`) |

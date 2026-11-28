@@ -1,8 +1,8 @@
 # Plan after 0.2.0
 
 > **Progress.** 0.3.0 (29 November 2026) has 11.1–11.3: `SNMP`, `ScannerHealth`, `ScannerHealthReader` and
-> `phastphoto health`, read on a real FF-680W. `status --raw` from 11.3 moved to 12.1. Next: the visit at the
-> scanner (row 4 below).
+> `phastphoto health`, read on a real FF-680W. `status --raw` from 11.3 moved to 12.1. 11.4 (labelling) was done
+> at the scanner on 29 November 2026: see its results below. Next: the rest of row 4's visit (10.1, 12.1 captures).
 
 What is left to build and check, in packets sized for one engineer, in the style of [ROADMAP.md](ROADMAP.md).
 Packet numbers below 10 are ROADMAP's; this plan starts at 10 and does not repeat what ROADMAP already says.
@@ -249,6 +249,22 @@ memory per print at 300 and 600 dpi.
 - Files: `EpsonMIB.swift`, the table above, ROADMAP status.
 - Tests: each confirmed label gets a line in 11.2's synthetic walk.
 - Do **not** reset the roller counter as an experiment: it cannot be put back to 1331 by anything in this plan.
+- **Results (29 Nov 2026), now in `ScannerHealth.counts` and `.power`:**
+  1. The Utility's Counter tab matched by value: ADF = columns 4, 7, 8; double-sided = 5; single-sided = 10;
+     paper jam = 6; double feed = 11. It also shows carrier sheet (0) and the roller kit; scanner glass, passport
+     sheet, card slot and paper protection say "No Information".
+  2. A single-sided sheet moved 4, 7, 8, 10 and the kit by one; a duplex sheet moved 4, 7, 8, 5 and the kit by one:
+     **counts are sheets, not sides.**
+  3. A folded A4 sheet fed as one tripped double-feed detection (`#err ADF DFED`): column 11 +1, column 10 and the
+     kit +1 (a stopped sheet still counts), column 6 unchanged. No jam was caused, so column 6 is labelled by value.
+  4. Sleep 10 → 15 moved `…3.1.1.9.1`; power-off Off → 30 moved `…3.5.1.4.1` from 0 to 30. Both minutes.
+     `…3.3.1.3.1` (120) did not move and stays unlabelled.
+  5. SNMP answered every read during a duplex scan (11 reads, within 0.11 s) and the scan finished normally.
+     After 11.5 minutes idle (past the 10-minute sleep timer) three reads answered in 0.1–0.2 s, and the scanner
+     stayed asleep (its owner watched): reading health doesn't wake it. `sysUpTime`
+     restarted during the session, around when the Utility set the timers: it is not time since power-on.
+  6. The Utility has no cleaning alert on this model. Its "Detect Glass Dirt" setting is not in SNMP (a full walk
+     with it on and off differed only in the clock).
 
 **11.5 ESC/I-2 maintenance mode.** Needed for USB, and for cleaning and jam counts if SNMP never yields them.
 - Goal: `ScannerSession.maintenanceReport()`.
@@ -342,7 +358,7 @@ ROADMAP status rows for phases 10–12, CI unchanged (all new tests run without 
 | 1 | 11.1 SNMP wire format | High | Done (0.3.0) | — |
 | 2 | 11.2 Health parser | High | Done (0.3.0) | — |
 | 3 | 11.3 Client, reader, `health` | High | Done (0.3.0); `status --raw` moved to 12.1 | [HW] read-only: done |
-| 4 | 10.1 Wi-Fi checklist + 12.1 captures + 11.4 labelling, one session | High | 1 day at the scanner | [HW], owner, Epson Scan 2 Utility |
+| 4 | 10.1 Wi-Fi checklist + 12.1 captures (11.4 labelling: done) | High | 1 day at the scanner | [HW], owner |
 | 5 | 12.1 Status in full | High | 0.5 day | captures from 4 |
 | 6 | 10.2, 10.3 Corpus; crop, ink, duplicates | High | 2–3 days | [HW data] |
 | 7 | 10.4, 10.7 Vision on real prints; iPhone run | Medium | 1–2 days | [Device] |

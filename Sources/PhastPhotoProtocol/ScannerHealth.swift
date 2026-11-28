@@ -3,8 +3,9 @@ import Foundation
 /// The scanner's health and identity values from SNMP (docs/PLAN.md, phase 11): firmware, roller kit wear, clock,
 /// uptime and network details. Every field is optional, so an app shows what the scanner gave.
 ///
-/// Only values whose meaning is established get a named field. The rest (the scanner's unlabelled counters, the
-/// timer settings) are kept in ``unlabelled`` until a hardware session labels them (plan 11.4).
+/// Only values whose meaning is established get a named field: the counters and timers were matched against Epson
+/// Scan 2 Utility and moved by test scans and setting changes on a real FF-680W (plan 11.4, 29 Nov 2026). The rest
+/// are kept in ``unlabelled``.
 public struct ScannerHealth: Hashable, Sendable {
     public struct Firmware: Hashable, Sendable {
         /// `Main FW`, such as `SP14P2`.
@@ -21,8 +22,8 @@ public struct ScannerHealth: Hashable, Sendable {
         public var kind: Kind
         /// The scanner's name for the part, as it spells it ("Roller Assemblly Kit" on firmware 18.60).
         public var name: String
-        /// Scans on the part since it was fitted (the roller kit count matched the scanner's total on a scanner
-        /// whose kit was never changed). Whether a duplex scan counts once or twice is not established.
+        /// Sheets fed since the part was fitted (Epson Scan 2 Utility's "Number of Scans"). A duplex print counts
+        /// once, and so does a sheet stopped by a double feed.
         public var used: Int?
         /// The scanner's life limit, in the same unit (200,000 for the FF-680W roller kit, as Epson publishes).
         public var life: Int?
@@ -40,6 +41,30 @@ public struct ScannerHealth: Hashable, Sendable {
         }
     }
 
+    /// The scanner's lifetime counts, as Epson Scan 2 Utility's Counter tab shows them. Counts are of sheets:
+    /// a duplex print adds one to ``feederSheets`` and one to ``doubleSided``.
+    public struct ScanCounts: Hashable, Sendable {
+        /// Every sheet the feeder took ("ADF"): single-sided plus double-sided, including sheets stopped by a
+        /// double feed.
+        public var feederSheets: Int?
+        public var singleSided: Int?
+        public var doubleSided: Int?
+        /// Paper jams. Matched by value only (no jam was caused on purpose).
+        public var paperJams: Int?
+        /// Double feeds the scanner detected (only while double-feed detection is on).
+        public var doubleFeeds: Int?
+    }
+
+    /// The power-save settings, in minutes.
+    public struct PowerTimers: Hashable, Sendable {
+        /// Minutes idle before the scanner sleeps.
+        public var sleepMinutes: Int?
+        /// Minutes idle before it switches off; 0 means never ("Off").
+        public var powerOffMinutes: Int?
+        /// The power-off choices the scanner offers (0 = Off), in its order.
+        public var powerOffChoices: [Int] = []
+    }
+
     public struct NetworkDetails: Hashable, Sendable {
         /// The scanner's IPv4 address. Identifies the network: hidden by default in ``displayFields(showIdentifiers:)``.
         public var ipv4Address: String?
@@ -54,12 +79,13 @@ public struct ScannerHealth: Hashable, Sendable {
     public var consumables: [Consumable] = []
     /// The scanner's clock (it kept UTC on the scanner checked).
     public var clock: Date?
-    /// Time since the network interface started.
+    /// Time since the network interface started: not since power-on (it restarted when settings were changed).
     public var uptime: Duration?
     public var network: NetworkDetails?
-    /// Integer values whose meaning is not established yet, keyed by OID: the counter table (lifetime scans, jams,
-    /// double feeds, single-sided and duplex counts are candidates), the sleep and power-off settings, and the
-    /// consumable table's unknown columns.
+    public var counts: ScanCounts?
+    public var power: PowerTimers?
+    /// Integer values whose meaning is not established yet, keyed by OID: counter columns 7 and 8 (always equal to
+    /// ``ScanCounts/feederSheets`` so far), the tables' index and flag columns, and other power settings.
     public var unlabelled: [String: Int] = [:]
 
     public init() {}
@@ -91,11 +117,33 @@ extension ScannerHealth {
             } else if let s = b.oid.suffix(after: EpsonMIB.consumableTable), s.count == 3 {
                 // column . 1 . row
                 consumableColumns[s[2], default: [:]][s[0]] = b.value
-            } else if b.oid.hasPrefix(EpsonMIB.counterTable) || b.oid.hasPrefix(EpsonMIB.powerSettings) {
+            } else if let s = b.oid.suffix(after: EpsonMIB.counterTable), s.count == 3, let v = b.value.integerValue {
+                // column . 1 . 1
+                var c = counts ?? ScanCounts()
+                switch s[0] {
+                case EpsonMIB.CounterColumn.feederSheets: c.feederSheets = v
+                case EpsonMIB.CounterColumn.singleSided: c.singleSided = v
+                case EpsonMIB.CounterColumn.doubleSided: c.doubleSided = v
+                case EpsonMIB.CounterColumn.paperJams: c.paperJams = v
+                case EpsonMIB.CounterColumn.doubleFeeds: c.doubleFeeds = v
+                default: unlabelled[b.oid.description] = v
+                }
+                if c != ScanCounts() { counts = c }
+            } else if b.oid.hasPrefix(EpsonMIB.powerSettings) {
                 if b.oid == EpsonMIB.clock {
                     clock = Self.date(fromDateAndTime: b.value)
                 } else if let v = b.value.integerValue {
-                    unlabelled[b.oid.description] = v
+                    var p = power ?? PowerTimers()
+                    if b.oid == EpsonMIB.sleepTimer {
+                        p.sleepMinutes = v
+                    } else if b.oid == EpsonMIB.powerOffTimer {
+                        p.powerOffMinutes = v
+                    } else if let s = b.oid.suffix(after: EpsonMIB.powerOffChoices), s.count == 1 {
+                        p.powerOffChoices.append(v)  // a walk returns them in index order
+                    } else {
+                        unlabelled[b.oid.description] = v
+                    }
+                    if p != PowerTimers() { power = p }
                 }
             } else if b.oid == EpsonMIB.sysUpTime, case .timeTicks(let ticks) = b.value {
                 uptime = .milliseconds(Int64(ticks) * 10)
@@ -176,7 +224,7 @@ extension ScannerHealth {
         if let serialNumber { out.append(("Serial number", shown(serialNumber))) }
         for part in consumables {
             let name = part.kind == .rollerKit ? "Roller assembly kit" : part.name
-            var text = "\(part.used.map(String.init) ?? "?") of \(part.life.map(String.init) ?? "?") scans"
+            var text = "\(part.used.map(String.init) ?? "?") of \(part.life.map(String.init) ?? "?") sheets"
             if let left = part.remainingFraction { text += String(format: " (%.0f%% left)", left * 100) }
             if part.isDue { text += ", due for replacement" }
             out.append((name, text))
@@ -189,6 +237,17 @@ extension ScannerHealth {
         if let address = network?.ipv4Address { out.append(("IPv4 address", shown(address))) }
         if let mask = network?.subnetMask { out.append(("Subnet mask", mask)) }
         if let mac = network?.macAddress { out.append(("MAC address", shown(mac))) }
+        if let c = counts {
+            if let v = c.feederSheets { out.append(("Sheets scanned", String(v))) }
+            if let v = c.singleSided { out.append(("Single-sided", String(v))) }
+            if let v = c.doubleSided { out.append(("Double-sided", String(v))) }
+            if let v = c.paperJams { out.append(("Paper jams", String(v))) }
+            if let v = c.doubleFeeds { out.append(("Double feeds", String(v))) }
+        }
+        if let p = power {
+            if let v = p.sleepMinutes { out.append(("Sleep timer", "\(v) min")) }
+            if let v = p.powerOffMinutes { out.append(("Power-off timer", v == 0 ? "off" : "\(v) min")) }
+        }
         for key in unlabelled.keys.sorted(by: { (SNMPOID(parsing: $0) ?? "0.0") < (SNMPOID(parsing: $1) ?? "0.0") }) {
             out.append(("Unlabelled \(key)", String(unlabelled[key]!)))
         }
@@ -217,13 +276,27 @@ public enum EpsonMIB {
         static let labelled: Set<UInt32> = [name, life, used]
     }
 
-    /// Counter table, `column.1.1`: unlabelled (columns 4, 7 and 8 equalled the roller kit count; 5, 6, 10, 11 are
-    /// other counts).
+    /// Counter table, `column.1.1`. Matched to Epson Scan 2 Utility's Counter tab and moved by one single-sided
+    /// scan, one duplex scan and one detected double feed (29 Nov 2026): column 4 = ADF sheets, 10 = single-sided,
+    /// 5 = double-sided, 11 = double feeds; 6 = paper jams by value only. Columns 7 and 8 equalled column 4
+    /// throughout; their difference is unknown.
     public static let counterTable: SNMPOID = "1.3.6.1.4.1.1248.1.4.2.6.1.1"
+    enum CounterColumn {
+        static let feederSheets: UInt32 = 4
+        static let doubleSided: UInt32 = 5
+        static let paperJams: UInt32 = 6
+        static let singleSided: UInt32 = 10
+        static let doubleFeeds: UInt32 = 11
+    }
 
-    /// Power and clock settings: the clock at ``clock``; `…1.1.9.1` (10) is probably the sleep timer and `…3.1.3.1`
-    /// (120) the power-off timer, with its choices at `…6.1.2.1.n` (0, 30, 60, 120, 240, 480, 720): unconfirmed.
+    /// Power and clock settings. Changing the timers in Epson Scan 2 Utility moved exactly ``sleepTimer`` and
+    /// ``powerOffTimer`` (29 Nov 2026). `…3.3.1.3.1` (120) is not the power-off timer; it and the other small values
+    /// here are unlabelled. Glass-dirt detection is not in SNMP at all.
     public static let powerSettings: SNMPOID = "1.3.6.1.4.1.1248.1.2.2.3"
+    public static let sleepTimer: SNMPOID = "1.3.6.1.4.1.1248.1.2.2.3.1.1.9.1"
+    public static let powerOffTimer: SNMPOID = "1.3.6.1.4.1.1248.1.2.2.3.5.1.4.1"
+    /// `.n`: 0 (Off), 30, 60, 120, 240, 480, 720 on the FF-680W, as the Utility's menu.
+    public static let powerOffChoices: SNMPOID = "1.3.6.1.4.1.1248.1.2.2.3.6.1.2.1"
     /// The scanner's clock, a `DateAndTime`.
     public static let clock: SNMPOID = "1.3.6.1.4.1.1248.1.2.2.3.1.1.11.1"
 
