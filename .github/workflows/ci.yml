@@ -44,3 +44,10 @@ jobs:
         run: |
           xcodebuild -project Drivers/PhastPhotoUSBDriver/PhastPhotoUSBDriver.xcodeproj -target PhastPhotoUSBDriver \
             -sdk driverkit build CODE_SIGNING_ALLOWED=NO
+      - name: Build the harness app, Wi-Fi and USB (iOS device, unsigned)
+        # The USB scheme embeds the driver; the generated project is committed.
+        run: |
+          for scheme in PhastPhotoHarness PhastPhotoHarnessUSB; do
+            xcodebuild -project Examples/PhastPhotoHarness/PhastPhotoHarness.xcodeproj -scheme "$scheme" \
+              -destination 'generic/platform=iOS' build CODE_SIGNING_ALLOWED=NO -quiet
+          done
