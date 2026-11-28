@@ -15,7 +15,9 @@ struct ContentView: View {
                     Text(HarnessModel.deviceDescription).font(.footnote).foregroundStyle(.secondary)
                 }
 
-                discoverySection
+                connectionSection
+
+                if model.connection == .wifi { discoverySection }
 
                 Section("Scanner") {
                     HStack {
@@ -81,6 +83,42 @@ struct ContentView: View {
                 Button("Delete all", role: .destructive) { model.deleteAllFiles() }
             }
         }
+    }
+
+    @ViewBuilder private var connectionSection: some View {
+        @Bindable var model = model
+        Section {
+            if HarnessModel.embedsUSBDriver {
+                Picker("Connection", selection: $model.connection) {
+                    ForEach(HarnessModel.Connection.allCases) { Text($0.rawValue).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .disabled(model.isBusy)
+                if model.connection == .usb {
+                    HStack {
+                        Label(model.usbPresent ? "Scanner driver running" : "No scanner driver running",
+                              systemImage: model.usbPresent ? "cable.connector" : "cable.connector.slash")
+                        Spacer()
+                        Button("Check") { model.refreshUSB() }
+                    }
+                    Button("Open Settings") { model.openSettings() }
+                }
+            } else {
+                LabeledContent("Connection", value: "Wi-Fi")
+            }
+        } header: {
+            Text("Connection")
+        } footer: {
+            if HarnessModel.embedsUSBDriver {
+                Text("USB works on iPads with an M-series chip. Turn the driver on in Settings > General > Drivers "
+                    + "(or Settings > PhastPhoto Harness > Drivers) and plug the scanner in; until then the driver "
+                    + "doesn't run and the scanner can't be seen.")
+            } else {
+                Text("This build is Wi-Fi only. The \"PhastPhotoHarness USB\" scheme embeds the USB driver (M-series "
+                    + "iPads, paid team).")
+            }
+        }
+        .onChange(of: model.connection) { _, new in if new == .usb { model.refreshUSB() } }
     }
 
     @ViewBuilder private var discoverySection: some View {

@@ -188,7 +188,10 @@ or iPad as well as the Mac (the simulator's Vision is fake).
 **10.5 USB from a Mac [HW].** ROADMAP 7.2: first run of `USBTransport` on IOUSBHost; reset after an interrupted
 session.
 
-**10.6 USB on iPad, the rest [HW].** ROADMAP 7.5: 600 dpi, a stack, timeouts, reset, unplugging mid-scan.
+**10.6 USB on iPad, the rest [HW].** ROADMAP 7.5: 600 dpi, a stack, timeouts, reset, unplugging mid-scan. Use the
+harness's **PhastPhotoHarness USB** scheme (29 Nov 2026: the harness embeds the driver and switches between Wi-Fi
+and USB, so one app runs the whole pipeline over either; builds, not yet run on the iPad), and re-check a scan now
+that hardware crop is on by default (the iPad's USB scans predate it).
 
 **10.7 First run on an iPhone [Device][HW].** Harness app over Wi-Fi: permission prompt, refusal, time and peak
 memory per print at 300 and 600 dpi.

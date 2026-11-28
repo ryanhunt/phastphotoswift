@@ -4,6 +4,8 @@
 
 DEVELOPMENT_TEAM =
 HARNESS_BUNDLE_ID = com.example.phastphoto-harness
+// The USB build (DriverKit, paid team). Its driver is "$(HARNESS_USB_BUNDLE_ID).Driver".
+HARNESS_USB_BUNDLE_ID = $(HARNESS_BUNDLE_ID).usb
 
 
 #include? "Local.xcconfig"

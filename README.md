@@ -247,6 +247,14 @@ duplicate. Use it in the simulator, where discovery finds nothing and Vision's f
 (its OCR did read the sample's back on iOS 26.0), and on a device to measure processing without a scanner. After changing `project.yml` or adding a source file, run `xcodegen generate`
 there.
 
+**USB on an M-series iPad.** The **PhastPhotoHarness USB** scheme builds the same app with the USB driver from
+[Drivers/PhastPhotoUSBDriver](Drivers/PhastPhotoUSBDriver/README.md) embedded, and adds a Wi-Fi/USB switch at the
+top. It needs a paid team (DriverKit) and `HARNESS_USB_BUNDLE_ID` in `Local.xcconfig`; an App ID that already has
+the DriverKit capability (such as the USB test host's) saves registering a new one. Build it once in Xcode's GUI so
+Xcode creates the DriverKit profiles, install it, turn the driver on in Settings > General > Drivers, plug the
+scanner in, choose **USB** and tap **Check**. The plain **PhastPhotoHarness** scheme stays Wi-Fi only and builds
+with any team.
+
 ## Development
 
 ```bash
