@@ -2,7 +2,7 @@
 
 > **Progress.** 0.3.0 (29 November 2026) has 11.1–11.3: `SNMP`, `ScannerHealth`, `ScannerHealthReader` and
 > `phastphoto health`, read on a real FF-680W. `status --raw` from 11.3 moved to 12.1. 11.4 (labelling) was done
-> at the scanner on 29 November 2026: see its results below. Next: the rest of row 4's visit (10.1, 12.1 captures).
+> at the scanner on 29 November 2026 and shipped in 0.4.0 (`ScannerHealth.counts`, `.power`): see its results below. Next: the rest of row 4's visit (10.1, 12.1 captures).
 
 What is left to build and check, in packets sized for one engineer, in the style of [ROADMAP.md](ROADMAP.md).
 Packet numbers below 10 are ROADMAP's; this plan starts at 10 and does not repeat what ROADMAP already says.
