@@ -173,6 +173,9 @@ interrupt endpoint, most likely the scan button). There is no "IS" framing and n
 send `1C 58` and read the `06`, then commands as above, reading exactly the bytes expected (64-byte header,
 then the body).
 
+- **On macOS, match the interface with vendor, product, `bInterfaceNumber` and `bConfigurationValue` (1).** USB
+  matching takes only whole key combinations: without the configuration value, `IOServiceGetMatchingService`
+  finds the device but not its interface (macOS 27, 29 Nov 2026). Epson's driver did not hold interface 0.
 - **A command's header and its parameter block are separate bulk transfers.** Sent as one transfer, `PARA`
   is never answered.
 - An interrupted session can leave the scanner not answering: a USB reset (the same as replugging) clears it.

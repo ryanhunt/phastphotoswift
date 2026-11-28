@@ -213,6 +213,13 @@ faster than Debug.
 swift run phastphoto health
 ```
 
+Pass `--usb` to use a scanner plugged into the Mac instead of Wi-Fi (`info`, `capa`, `status` and `scan`; `health`
+is Wi-Fi only):
+
+```bash
+swift run phastphoto --usb status
+```
+
 Pass `--host <address>` (or set `PHASTPHOTO_HOST`) to skip Bonjour. `info` hides the serial number unless you
 pass `--show-serial`; `discover --all` lists every Bonjour scanner, not only FF-680Ws.
 

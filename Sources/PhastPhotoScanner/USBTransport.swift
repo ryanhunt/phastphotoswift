@@ -62,6 +62,8 @@ public actor USBTransport: ScannerTransport {
         + "that was interrupted. Switch the scanner off and on, then try again."
     public static let interfaceInUseMessage =
         "The scanner's USB connection is in use by another app (Epson Scan?). Quit it and try again."
+    public static let interfaceMissingMessage =
+        "The scanner is on USB but its scanner interface isn't available yet: wait a few seconds, or unplug it and plug it in again."
 
     /// Over USB a poll costs about 3 ms; long naps add seconds per side.
     public nonisolated let pollInterval: Duration = .milliseconds(5)
@@ -200,11 +202,20 @@ final class IOUSBHostPipes: USBPipes, @unchecked Sendable {
         matching("IOUSBHostDevice", interface: nil)
     }
 
-    private static func matching(_ className: String, interface: Int?) -> CFDictionary {
+    /// The scanner's only configuration.
+    static let configurationValue = 1
+
+    /// A matching dictionary for the scanner (`interface` nil) or one of its interfaces. USB matching only accepts
+    /// whole key combinations: for an interface, vendor, product, interface number **and** configuration value.
+    /// Without `bConfigurationValue` nothing matches (seen on macOS 27, 29 Nov 2026).
+    static func matching(_ className: String, interface: Int?) -> CFDictionary {
         let dict = IOServiceMatching(className) as NSMutableDictionary
         dict["idVendor"] = USBTransport.vendorID
         dict["idProduct"] = USBTransport.productID
-        if let interface { dict["bInterfaceNumber"] = interface }
+        if let interface {
+            dict["bInterfaceNumber"] = interface
+            dict["bConfigurationValue"] = configurationValue
+        }
         return dict
     }
 
@@ -269,7 +280,8 @@ final class IOUSBHostPipes: USBPipes, @unchecked Sendable {
         }
         IOObjectRelease(device)
         guard let service = Self.findService(Self.matching("IOUSBHostInterface", interface: USBTransport.interfaceNumber)) else {
-            throw ScannerError.connectionFailed(USBTransport.interfaceInUseMessage)
+            // the device is there but its interface isn't published: not configured (yet), or still settling
+            throw ScannerError.connectionFailed(USBTransport.interfaceMissingMessage)
         }
         defer { IOObjectRelease(service) }
         let interface: IOUSBHostInterface
