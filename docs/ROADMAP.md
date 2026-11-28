@@ -26,7 +26,7 @@ OCR of rendered text on macOS).
 | Crop and ink | 2.1–2.5 | Done (`RGBImage`, `PhotoBox`, `PhotoQuad`, `AutoCrop`, `InkFraction`) |
 | Crop on real scans | 2.6 | Open **[HW]** |
 | Back text, back policy, print assembly | 3.1, 3.3, 3.4 | Done (`BackText`, `BackPolicy`, `PrintAssembler`) |
-| Back OCR | 3.2 | Code done (`BackReader`); real handwriting unverified **[Device]** |
+| Back OCR | 3.2, 3.5 | Code done (`BackReader`, `PenInk`); one real handwritten back read (28 Nov 2026), more needed **[Device]** |
 | Orientation tag, metadata | 4.1, 4.4 | Done (`PhotoOrientation`, `PhotoMetadata`, lossless) |
 | Face roll, scene fallback | 4.2, 4.3 | Code done (`AutoRotation`); real photos unverified **[Device]** |
 | Duplicates | 5.1, 5.2 | Done (`Duplicates`, `DuplicateIndex`) |
@@ -212,6 +212,19 @@ any constant.
   under 0.015: never drop a back on ink alone.
 - Constants: read threshold 0.002; blank threshold 0.015.
 - Tests: decision table with injected ink and text.
+
+**3.5 Lone words in pen** (`PhastPhotoImaging/PenInk.swift`, `BackText.humanText(_: [BackLine])`). *Not in
+ffscan.* `human_text` drops a line with a single word, because the paper maker's pattern reads as lone words
+("rchive", "FILMI"). On the first real backs (28 Nov 2026) that dropped a back with one name written in blue
+ballpoint: Vision read the name, the filter removed it, and at 0.003 ink the back counted as blank.
+- `BackReader` now returns each line's box in the stored image (`BackReading.boxes`); a line whose box has at least
+  1% of pixels more than 150 (summed channel difference) from the paper is pen, and a pen line that is one real
+  word and nothing else is kept. `VisionAnalyzer.humanBackText` applies it; `PrintAnalyzer`'s default does not.
+- Evidence: four real Fujicolor backs at 300 dpi. Watermark and lab-code lines: 0% strong pixels (single specks
+  only). The ballpoint word: 7–9.5%. Thresholds are provisional until the raw corpus (1.2) has more handwriting,
+  pencil, and dark lab backprints (a dark lone word such as "KIMG" would be kept).
+- Tests: synthetic backs in the measured colours; Vision box mapping for each orientation; real Vision on a
+  rendered word in blue and in pale grey (macOS).
 
 **3.4 Print assembly** (`PhastPhotoScanner/PrintAssembler.swift`).
 - Ports pairing and relabelling (`app.py:639-648`).

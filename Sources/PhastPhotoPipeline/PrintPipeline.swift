@@ -176,7 +176,7 @@ public struct PrintPipeline: Sendable {
             backCrop = crop
             do {
                 result.backText = try await BackPolicy.readBack(ink: InkFraction.of(crop)) {
-                    BackText.humanText(try await analyzer.readBack(crop))
+                    try await analyzer.humanBackText(crop)
                 }
             } catch {
                 backReadFailed = true

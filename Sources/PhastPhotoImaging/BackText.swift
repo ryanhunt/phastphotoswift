@@ -128,19 +128,30 @@ public enum BackText {
     /// ("Mom 1986"). Letters glued to digits ("L3145CAXCNO") belong to a lab code and are not words.
     /// Kept lines are stripped of surrounding whitespace and joined with newlines.
     public static func humanText(_ text: String) -> String {
+        humanText([BackLine(text: text)])
+    }
+
+    /// ``humanText(_:)-(String)`` over recognised lines, where a line known to be in pen (``PenInk``) is also kept
+    /// when it is a single real word and nothing else ("Mum", a name; not "0001 NNNN"). Not in ffscan, which drops a lone word: the paper maker's pattern
+    /// reads as lone words too ("rchive", "FILMI"), but in faint ink.
+    public static func humanText(_ backLines: [BackLine]) -> String {
         var kept: [String] = []
-        for line in lines(of: text) {
-            let tokens = split(line, by: tokenSeparator)
-                .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: ".-")) }
-            let words = tokens.filter {
-                realWord.firstMatch(in: $0, range: range($0)) != nil && !watermarkWords.contains($0.lowercased())
-            }
-            let separatedDate = datePatterns.contains { pattern, kind in
-                kind != .year && pattern.firstMatch(in: line, range: range(line)) != nil
-            }
-            let hasYear = standaloneYear.firstMatch(in: line, range: range(line)) != nil
-            if separatedDate || words.count >= 2 || (!words.isEmpty && hasYear) {
-                kept.append(line.trimmingCharacters(in: pythonWhitespace))
+        for backLine in backLines {
+            for line in lines(of: backLine.text) {
+                let tokens = split(line, by: tokenSeparator)
+                    .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: ".-")) }
+                let words = tokens.filter {
+                    realWord.firstMatch(in: $0, range: range($0)) != nil && !watermarkWords.contains($0.lowercased())
+                }
+                let separatedDate = datePatterns.contains { pattern, kind in
+                    kind != .year && pattern.firstMatch(in: line, range: range(line)) != nil
+                }
+                let hasYear = standaloneYear.firstMatch(in: line, range: range(line)) != nil
+                // a pen line must be the word alone: dark lab codes mix words with numbers ("0001 NNNN")
+                let loneWord = words.count == 1 && tokens.filter { !$0.isEmpty }.count == 1
+                if separatedDate || words.count >= 2 || (!words.isEmpty && hasYear) || (backLine.penInk && loneWord) {
+                    kept.append(line.trimmingCharacters(in: pythonWhitespace))
+                }
             }
         }
         return kept.joined(separator: "\n")
@@ -164,5 +175,16 @@ public enum BackText {
         }
         pieces.append(String(s[start...]))
         return pieces
+    }
+}
+
+/// One recognised line on a print's back, and whether it is written in strong ink (``PenInk/isWritten(in:box:paper:)``).
+public struct BackLine: Hashable, Sendable {
+    public var text: String
+    public var penInk: Bool
+
+    public init(text: String, penInk: Bool = false) {
+        self.text = text
+        self.penInk = penInk
     }
 }
