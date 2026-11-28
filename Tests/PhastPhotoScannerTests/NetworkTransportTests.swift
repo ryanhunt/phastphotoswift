@@ -142,8 +142,8 @@ final class ISTestServer: Sendable {
 
     /// The test server's hello must not wait for a cooperative thread. Under
     /// `LIBDISPATCH_COOPERATIVE_POOL_STRICT=1` (one cooperative thread, which this test blocks) a hello that waits
-    /// for one never arrives, so this fails. The 5 s limit is only a backstop: 300 ms was too short for the iOS
-    /// Simulator on a busy CI runner.
+    /// for one never arrives, so this fails. The 30 s limit is only a backstop (a passing run returns at once):
+    /// 300 ms and then 5 s were too short for the iOS Simulator on a busy CI runner.
     @Test func testServerSendsTheHelloWithoutACooperativeThread() async throws {
         let server = try ISTestServer(scanner: SimulatedScanner())
         let port = try await server.start()
@@ -155,11 +155,11 @@ final class ISTestServer: Sendable {
             $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { connect(fd, $0, socklen_t(MemoryLayout<sockaddr_in>.size)) }
         }
         #expect(connected == 0)
-        var timeout = timeval(tv_sec: 5, tv_usec: 0)
+        var timeout = timeval(tv_sec: 30, tv_usec: 0)
         setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, socklen_t(MemoryLayout<timeval>.size))
         var header = [UInt8](repeating: 0, count: ISPacket.headerLength)
         let n = recv(fd, &header, header.count, MSG_WAITALL)  // blocks this cooperative thread
-        #expect(n == header.count && SubnetProbe.isHello(header), "no hello within 5 s (got \(n) bytes)")
+        #expect(n == header.count && SubnetProbe.isHello(header), "no hello within 30 s (got \(n) bytes)")
     }
 }
 

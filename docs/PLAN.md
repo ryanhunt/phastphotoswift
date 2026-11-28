@@ -186,7 +186,15 @@ roll sign checked by eye, the scene margin on each supported OS, red-eye on real
 or iPad as well as the Mac (the simulator's Vision is fake).
 
 **10.5 USB from a Mac [HW].** ROADMAP 7.2: first run of `USBTransport` on IOUSBHost; reset after an interrupted
-session.
+session. *Started 29 Nov 2026:* CLI `--usb`; `INFO`, `STATUS` and `CAPA` work once the interface match includes
+`bConfigurationValue` (without it nothing matched and the old code called the interface "in use"). No Epson
+driver held the interface. Still to do: single-sided and duplex scans, 600 dpi, a stack, a reset.
+*Open question:* after 11.5 minutes idle with USB plugged in (sleep timer 10 minutes), the scanner had left the USB
+bus (no `idVendor` 1208 in `ioreg`) and answered neither ping, SNMP nor a Wi-Fi `status`, although Bonjour still
+listed it (cached). Earlier, asleep on Wi-Fi alone, it kept answering SNMP. Either it sleeps deeper with USB
+attached, dropping off USB and Wi-Fi, or it was switched off; check the power light, wake it with the button, and
+repeat. If sleep drops it from USB, a USB app must expect the device to vanish and come back on wake, or keep the
+scanner awake (sleep timer up to its maximum).
 
 **10.6 USB on iPad, the rest [HW].** ROADMAP 7.5: 600 dpi, a stack, timeouts, reset, unplugging mid-scan.
 

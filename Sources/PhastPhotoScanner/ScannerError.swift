@@ -31,7 +31,8 @@ public enum ScannerError: Error, Sendable, LocalizedError {
         case .busy(let holder):
             "The scanner is in use by \(holder ?? "another client"). If nothing else is scanning, a previous "
                 + "session didn't release it: switch the scanner off and on."
-        case .connectionFailed(let reason): "Couldn't connect to the scanner: \(reason)."
+        case .connectionFailed(let reason):
+            "Couldn't connect to the scanner: \(reason)" + (reason.last.map { ".?!".contains($0) } == true ? "" : ".")
         case .connectionClosed: "The scanner closed the connection."
         case .notConnected: "The scanner isn't connected."
         case .timedOut: "The scanner stopped answering."

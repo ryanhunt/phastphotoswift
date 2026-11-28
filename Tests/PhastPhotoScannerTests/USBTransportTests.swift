@@ -193,6 +193,25 @@ private func transport(over pipes: FakePipes) -> USBTransport {
         #expect(USBTransport.notPluggedInMessage.contains("plugged in"))
     }
 
+    #if os(macOS)
+    /// USB matching only accepts whole key combinations: an interface also needs `bConfigurationValue`, or
+    /// nothing matches and the scanner looks unplugged (found on the first Mac USB run).
+    @Test func interfaceMatchingIncludesTheConfiguration() {
+        let interface = IOUSBHostPipes.matching("IOUSBHostInterface", interface: 0) as NSDictionary
+        #expect(interface["bConfigurationValue"] as? Int == 1)
+        #expect(interface["bInterfaceNumber"] as? Int == 0)
+        #expect(interface["idVendor"] as? Int == 0x04B8 && interface["idProduct"] as? Int == 0x016B)
+        let device = IOUSBHostPipes.matching("IOUSBHostDevice", interface: nil) as NSDictionary
+        #expect(device["bConfigurationValue"] == nil && device["bInterfaceNumber"] == nil)
+    }
+    #endif
+
+    @Test func connectionMessagesEndWithOneFullStop() {
+        #expect(ScannerError.connectionFailed("in use. Try again.").localizedDescription.hasSuffix("again."))
+        #expect(!ScannerError.connectionFailed("in use. Try again.").localizedDescription.hasSuffix(".."))
+        #expect(ScannerError.connectionFailed("no route").localizedDescription.hasSuffix("route."))
+    }
+
     @Test func drivesAScannerSessionOverFakePipes() async throws {
         // ScannerSession enters command mode through the transport: the ack comes back through the fake.
         // The model check (INFO) is off: this test is only about entering command mode.

@@ -1,12 +1,13 @@
 // phastphoto: a developer CLI for checking PhastPhotoScanner against a real scanner.
 //
-//   phastphoto [--host HOST] discover [--all] | info [--show-serial] | capa | status
+//   phastphoto [--host HOST | --usb] discover [--all] | info [--show-serial] | capa | status
 //   phastphoto [--host HOST] health [--show-identifiers] [--community NAME]
 //   phastphoto [--host HOST] scan [--dpi N] [--gray] [--quality N] [--deskew] [--double-feed 1|3] [--width IN]
 //                                [--sides picture|both|back|fast] [--watch] [--out DIR] [--process PIPELINE...]
 //   phastphoto process [--sides MODE] [--out DIR] [PIPELINE...] RAW...
 //
 // Without --host the scanner is found with Bonjour (FF-680W only). PHASTPHOTO_HOST sets a default host.
+// --usb talks to a scanner on this Mac's USB instead (info, capa, status, scan; not health, which is Wi-Fi only).
 // The serial number is hidden unless --show-serial is given. `health` reads firmware, roller kit wear and
 // other values over SNMP (Wi-Fi only), hiding the serial, address and MAC unless --show-identifiers. `scan --process` saves the untouched scans in
 // OUT/raw and runs each print through PrintPipeline while the scan goes on; `process` does the same for raw
@@ -19,7 +20,7 @@ import PhastPhotoProtocol
 import PhastPhotoScanner
 
 let usage = """
-    usage: phastphoto [--host HOST] discover [--all] | info [--show-serial] | capa | status
+    usage: phastphoto [--host HOST | --usb] discover [--all] | info [--show-serial] | capa | status
            phastphoto [--host HOST] health [--show-identifiers] [--community NAME]
            phastphoto [--host HOST] scan [--dpi N] [--gray] [--quality N] [--deskew] [--double-feed 1|3]
                                          [--width INCHES] [--length INCHES] [--no-hardware-crop]
@@ -57,16 +58,23 @@ var processingFailed = false
 
 /// Where to connect: resolved once, then a fresh transport per session (a watch opens one per stack).
 struct Target: Sendable {
-    let host: String?
-    let scanner: DiscoveredScanner?
+    var host: String?
+    var scanner: DiscoveredScanner?
+    var usb = false
 
-    func makeTransport() -> NetworkTransport {
+    func makeTransport() -> any ScannerTransport {
+        if usb { return USBTransport() }
         if let host { return NetworkTransport(host: host) }
         return NetworkTransport(endpoint: scanner!.endpoint)
     }
 }
 
-func resolve(host: String?) async throws -> Target {
+func resolve(host: String?, usb: Bool = false) async throws -> Target {
+    if usb {
+        guard USBTransport.isScannerPresent() else { throw UsageError(description: ScannerConnection.noUSBMessage) }
+        print("found a scanner on USB")
+        return Target(usb: true)
+    }
     if let host { return Target(host: host, scanner: nil) }
     guard let scanner = try await ScannerDiscovery.firstScanner() else {
         // a scanner that just woke up can take a while to advertise again: try the local /24 directly
@@ -146,7 +154,10 @@ func describe(_ page: SpooledPage) -> String {
 }
 
 @MainActor func run() async throws {
-    let host = try option("--host") ?? ProcessInfo.processInfo.environment["PHASTPHOTO_HOST"]
+    let hostOption = try option("--host")
+    let host = hostOption ?? ProcessInfo.processInfo.environment["PHASTPHOTO_HOST"]
+    let usb = flag("--usb")
+    if usb, hostOption != nil { throw UsageError(description: "--usb and --host don't go together") }
     guard let command = arguments.first else { throw UsageError(description: usage) }
     arguments.removeFirst()
 
@@ -173,6 +184,7 @@ func describe(_ page: SpooledPage) -> String {
     case "health":
         let showIdentifiers = flag("--show-identifiers")
         let community = try option("--community") ?? "public"
+        if usb { throw UsageError(description: "health reads SNMP, which is Wi-Fi only: leave out --usb") }
         let target = try await resolve(host: host)
         let reader = if let host = target.host {
             ScannerHealthReader(host: host, community: community)
@@ -190,7 +202,7 @@ func describe(_ page: SpooledPage) -> String {
 
     case "info", "capa", "status":
         let showSerial = flag("--show-serial")
-        let target = try await resolve(host: host)
+        let target = try await resolve(host: host, usb: usb)
         try await ScannerSession.withSession(transport: target.makeTransport()) { session in
             switch command {
             case "info":
@@ -236,7 +248,7 @@ func describe(_ page: SpooledPage) -> String {
         let processing = process ? pipelineOptions : nil
         try settings.validate()
 
-        let target = try await resolve(host: host)
+        let target = try await resolve(host: host, usb: usb)
         let spool = StackedSpool(RawSpool(directory: processing == nil ? out : out.appending(path: "raw"), mode: mode))
         let finalSettings = settings
         let finalMode = mode
