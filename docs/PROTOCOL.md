@@ -189,14 +189,23 @@ with community `public`, beside the "IS" protocol: no lock, no session. Read-onl
   `Network FW`, `FW Package`); match rows by label.
 - **The roller assembly kit** at `…1.4.2.14.1.1.<column>.1.1`: name in column 3 (spelt "Roller Assemblly Kit"),
   life in 6 (200000, Epson's published figure), count in 7.
-- **Unlabelled counters** at `…1.4.2.6.1.1.<column>.1.1` (columns 4, 7, 8 equalled the kit count; 5, 6, 10, 11
-  other counts) and **settings** under `…1.2.2.3` (probably the sleep timer at `…3.1.1.9.1`, the power-off timer
-  at `…3.3.1.3.1` with its choices at `…3.6.1.2.1.n`), and the **clock** (`DateAndTime`, UTC) at `…3.1.1.11.1`.
+- **Lifetime counters** at `…1.4.2.6.1.1.<column>.1.1`, the numbers on Epson Scan 2 Utility's Counter tab
+  (labelled 29 Nov 2026 by matching values, then one single-sided scan, one duplex scan and one detected double
+  feed): column 4 = ADF sheets (single-sided plus double-sided), 10 = single-sided, 5 = double-sided, 11 = double
+  feeds, 6 = paper jams (by value only). They count **sheets**: a duplex print adds one, and a sheet stopped by a
+  double feed still counts as scanned (and towards the roller kit). Columns 7 and 8 equalled column 4 throughout.
+- **Power settings** under `…1.2.2.3`, in minutes: the sleep timer at `…3.1.1.9.1`, the power-off timer at
+  `…3.5.1.4.1` (0 = Off) with its choices at `…3.6.1.2.1.n` (0, 30, 60, 120, 240, 480, 720); changing each in the
+  Utility moved only that value. `…3.3.1.3.1` (120) is something else. The **clock** (`DateAndTime`, UTC) is at
+  `…3.1.1.11.1`. Glass-dirt detection is not in the tree: switching it changed nothing but the clock.
 - Also present and deliberately not read by the library: the last client's host name (`…1.4.2.21`) and the Wi-Fi
   group (network name, access point address).
 
 There is no Printer MIB, no eSCL or IPP, and Web Config needs an administrator password to be set before it shows
-anything. Whether SNMP answers while the scanner sleeps or scans is not known yet.
+anything. SNMP kept answering during a duplex scan (11 reads, all within 0.11 s), and the scan was unaffected.
+After 11.5 minutes idle (sleep timer 10 minutes) it still answered, in 0.1–0.2 s, and stayed asleep: SNMP reads
+don't wake it (the owner watched the power light). `sysUpTime` is the
+network interface's uptime, not the scanner's: it restarted during the session, around when the Utility set the timers.
 
 ## 4. Not covered yet
 

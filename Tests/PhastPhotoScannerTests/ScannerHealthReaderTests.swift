@@ -53,7 +53,7 @@ private actor EndlessAgent: SNMPExchanging {
     @Test func walkStopsAtTheEndOfTheSubtreeOrMIB() async throws {
         let agent = FakeAgent(SampleWalk.bindings)
         let counters = try await ScannerHealthReader.walk(EpsonMIB.counterTable, using: agent)
-        #expect(counters.count == 3)
+        #expect(counters.count == 6)
         #expect(try await ScannerHealthReader.walk("1.3.6.1.9", using: agent).isEmpty)  // past the end: noSuchName
     }
 

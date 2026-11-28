@@ -26,10 +26,17 @@ enum SampleWalk {
             ("\(epson).1.4.2.6.1.1.4.1.1", .counter32(1331)),
             ("\(epson).1.4.2.6.1.1.5.1.1", .counter32(1327)),
             ("\(epson).1.4.2.6.1.1.6.1.1", .counter32(18)),
+            ("\(epson).1.4.2.6.1.1.7.1.1", .counter32(1331)),
+            ("\(epson).1.4.2.6.1.1.10.1.1", .counter32(4)),
+            ("\(epson).1.4.2.6.1.1.11.1.1", .counter32(21)),
             ("\(epson).1.2.2.3.1.1.9.1", .integer(10)),
             ("\(epson).1.2.2.3.1.1.11.1", .octets([0x07, 0xEA, 0x0B, 0x1C, 0x0C, 0x34, 0x16, 0x00, 0x2B, 0x00, 0x00])),
             ("\(epson).1.2.2.3.3.1.3.1", .integer(120)),
+            ("\(epson).1.2.2.3.5.1.4.1", .integer(0)),
             ("\(epson).1.2.2.3.5.1.9.1", .octets([0x40, 0x00])),
+            ("\(epson).1.2.2.3.6.1.2.1.1", .integer(0)),
+            ("\(epson).1.2.2.3.6.1.2.1.2", .integer(30)),
+            ("\(epson).1.2.2.3.6.1.2.1.3", .integer(60)),
             ("1.3.6.1.2.1.1.3.0", .timeTicks(399_700)),
             ("1.3.6.1.2.1.4.20.1.1.192.0.2.10", .ipAddress([192, 0, 2, 10])),
             ("1.3.6.1.2.1.4.20.1.2.192.0.2.10", .integer(1)),
@@ -55,16 +62,27 @@ enum SampleWalk {
                                         macAddress: "02:00:00:00:00:01"))
     }
 
-    /// Unconfirmed meanings never get a name: they stay keyed by OID until a hardware session labels them.
+    /// The counters and timers labelled at the scanner (plan 11.4): matched to Epson Scan 2 Utility and moved by
+    /// test scans and setting changes.
+    @Test func countersAndTimersAreLabelled() {
+        let health = ScannerHealth(snmp: SampleWalk.bindings)
+        #expect(health.counts == .init(feederSheets: 1331, singleSided: 4, doubleSided: 1327, paperJams: 18,
+                                       doubleFeeds: 21))
+        #expect(health.power == .init(sleepMinutes: 10, powerOffMinutes: 0, powerOffChoices: [0, 30, 60]))
+    }
+
+    /// Unconfirmed meanings never get a name: they stay keyed by OID.
     @Test func unknownValuesStayUnlabelled() {
         let u = ScannerHealth(snmp: SampleWalk.bindings).unlabelled
-        #expect(u["1.3.6.1.4.1.1248.1.4.2.6.1.1.4.1.1"] == 1331)  // a counter, not yet "total scans"
-        #expect(u["1.3.6.1.4.1.1248.1.2.2.3.3.1.3.1"] == 120)  // probably the power-off timer
-        #expect(u["1.3.6.1.4.1.1248.1.2.2.3.1.1.9.1"] == 10)  // probably the sleep timer
+        #expect(u["1.3.6.1.4.1.1248.1.4.2.6.1.1.7.1.1"] == 1331)  // equals the feeder count; meaning unknown
+        #expect(u["1.3.6.1.4.1.1248.1.2.2.3.3.1.3.1"] == 120)  // not the power-off timer, which didn't move it
         #expect(u["1.3.6.1.4.1.1248.1.4.2.14.1.1.4.1.1"] == 3)  // consumable column 4
-        #expect(u["1.3.6.1.4.1.1248.1.4.2.14.1.1.7.1.1"] == nil)  // the count is labelled
+        #expect(u["1.3.6.1.4.1.1248.1.4.2.6.1.1.4.1.1"] == nil)  // feeder sheets: labelled
+        #expect(u["1.3.6.1.4.1.1248.1.2.2.3.1.1.9.1"] == nil)  // sleep timer: labelled
+        #expect(u["1.3.6.1.4.1.1248.1.2.2.3.5.1.4.1"] == nil)  // power-off timer: labelled
+        #expect(u["1.3.6.1.4.1.1248.1.4.2.14.1.1.7.1.1"] == nil)  // the kit count is labelled
         #expect(u["1.3.6.1.4.1.1248.1.2.2.3.1.1.11.1"] == nil)  // the clock is labelled
-        #expect(u.count == 8)
+        #expect(u.count == 5)
     }
 
     @Test func rollerKitStates() {
@@ -93,6 +111,7 @@ enum SampleWalk {
         // only MIB-2 (no Epson tree): no firmware, no consumables, not an error
         let mib2 = ScannerHealth(snmp: SampleWalk.bindings.filter { !$0.oid.description.hasPrefix(SampleWalk.epson) })
         #expect(mib2.firmware == nil && mib2.consumables.isEmpty && mib2.uptime != nil)
+        #expect(mib2.counts == nil && mib2.power == nil)
     }
 
     @Test func dateAndTime() {
@@ -113,9 +132,11 @@ enum SampleWalk {
         #expect(hidden["Serial number"] == "[redacted]")
         #expect(hidden["IPv4 address"] == "[redacted]" && hidden["MAC address"] == "[redacted]")
         #expect(hidden["Subnet mask"] == "255.255.255.0")
-        #expect(hidden["Roller assembly kit"] == "1331 of 200000 scans (99% left)")
+        #expect(hidden["Roller assembly kit"] == "1331 of 200000 sheets (99% left)")
         #expect(hidden["Firmware package"] == "18.60.SP14P2.FY17")
         #expect(hidden["Uptime"] == "1 h 6 min")
+        #expect(hidden["Sheets scanned"] == "1331" && hidden["Double feeds"] == "21" && hidden["Paper jams"] == "18")
+        #expect(hidden["Sleep timer"] == "10 min" && hidden["Power-off timer"] == "off")
         let shown = Dictionary(uniqueKeysWithValues: health.displayFields(showIdentifiers: true).map { ($0.key, $0.value) })
         #expect(shown["Serial number"] == "X0AB000000" && shown["MAC address"] == "02:00:00:00:00:01")
         #expect(!health.displayFields().contains { $0.value.contains("X0AB") || $0.value.contains("192.0.2") })

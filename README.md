@@ -139,21 +139,24 @@ Things worth knowing (details in [docs/PROTOCOL.md](docs/PROTOCOL.md)):
 ### Scanner health
 
 `ScannerHealthReader` reads the scanner's own report over SNMP (Wi-Fi only): firmware versions, the roller
-assembly kit's count against its life (200,000 scans on the FF-680W), the scanner's clock, uptime and network
-details. It needs no session and never takes the scanner's lock, so an app can show it while another app holds the
-scanner; read it between scans. It only reads: nothing can change a setting.
+assembly kit's count against its life (200,000 sheets on the FF-680W), lifetime counts (sheets, single-sided,
+double-sided, paper jams, double feeds: the numbers on Epson Scan 2 Utility's Counter tab), the sleep and
+power-off timers, the scanner's clock, uptime and network details. It needs no session and never takes the
+scanner's lock, so an app can show it while another app holds the scanner, even during a scan, and reading it
+doesn't wake a sleeping scanner. It only reads:
+nothing can change a setting.
 
 ```swift
 let health = try await ScannerHealthReader(scanner: scanner).read()      // or ScannerHealthReader(host:)
 print(health.firmware?.package ?? "?")                                     // "18.60.SP14P2.FY17"
 if let kit = health.rollerKit, let left = kit.remainingFraction {
-    print("roller kit: \(kit.used ?? 0) of \(kit.life ?? 0) scans, \(Int(left * 100))% left, due: \(kit.isDue)")
+    print("roller kit: \(kit.used ?? 0) of \(kit.life ?? 0) sheets, \(Int(left * 100))% left, due: \(kit.isDue)")
 }
+print(health.counts?.doubleFeeds ?? 0, health.power?.sleepMinutes ?? 0)     // 21, 10
 ```
 
-The scanner also reports counters and timer settings whose meaning isn't established yet (lifetime scans, jams,
-double feeds, sleep and power-off timers are candidates): they are in `health.unlabelled`, keyed by OID, until a
-session at the scanner labels them (docs/PLAN.md 11.4). The serial number, IPv4 address and MAC address are
+Counts are of sheets: a duplex print counts once. A few values whose meaning isn't established are in
+`health.unlabelled`, keyed by OID. The serial number, IPv4 address and MAC address are
 personal: `displayFields()` redacts them unless asked. SNMP may be off, or its community changed, in the
 scanner's Web Config; the reader then times out.
 
