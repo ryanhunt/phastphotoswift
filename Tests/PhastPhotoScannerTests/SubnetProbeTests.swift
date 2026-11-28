@@ -45,8 +45,12 @@ private func closedPort() async throws -> UInt16 {
     return port
 }
 
-/// Short timeouts: loopback answers at once, and the silent server must not hold the test for a second.
+/// Short timeouts for probes that should miss: the silent server must not hold the test for a second, and a slow
+/// machine only makes a miss more certain.
 private let quick = (connect: Duration.milliseconds(400), read: Duration.milliseconds(300))
+/// Generous timeouts for probes that should hit: a hit returns as soon as the hello arrives, so these cost nothing
+/// when it passes. Short ones failed on a loaded CI simulator (the hello took longer than 300 ms).
+private let patient = (connect: Duration.seconds(10), read: Duration.seconds(10))
 
 @Suite(.timeLimit(.minutes(1))) struct SubnetProbeTests {
     // MARK: hello check
@@ -94,7 +98,7 @@ private let quick = (connect: Duration.milliseconds(400), read: Duration.millise
         let server = try ISTestServer(scanner: SimulatedScanner())
         let port = try await server.start()
         defer { server.stop() }
-        let ok = await SubnetProbe.isEpsonScanner(ProbeCandidate(host: "127.0.0.1", port: port), connectTimeout: quick.connect, readTimeout: quick.read)
+        let ok = await SubnetProbe.isEpsonScanner(ProbeCandidate(host: "127.0.0.1", port: port), connectTimeout: patient.connect, readTimeout: patient.read)
         #expect(ok)
         // the probe never locks the scanner: it only reads the hello
         #expect(server.packetTypes.isEmpty)
@@ -127,10 +131,10 @@ private let quick = (connect: Duration.milliseconds(400), read: Duration.millise
         defer { first.stop(); second.stop(); garbage.stop() }
 
         let list = [closed, garbagePort, firstPort, secondPort].map { ProbeCandidate(host: "127.0.0.1", port: $0) }
-        // concurrency 2 < list size: the window has to slide
-        let hit = await SubnetProbe.scan(list, concurrency: 2, connectTimeout: quick.connect, readTimeout: quick.read)
+        // concurrency 2 < list size: the window has to slide. The misses here answer at once (garbage, refused).
+        let hit = await SubnetProbe.scan(list, concurrency: 2, connectTimeout: patient.connect, readTimeout: patient.read)
         #expect(hit == list[2])
-        let reversed = await SubnetProbe.scan(Array(list.reversed()), concurrency: 2, connectTimeout: quick.connect, readTimeout: quick.read)
+        let reversed = await SubnetProbe.scan(Array(list.reversed()), concurrency: 2, connectTimeout: patient.connect, readTimeout: patient.read)
         #expect(reversed == list[3])
     }
 

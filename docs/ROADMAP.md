@@ -12,14 +12,17 @@ no photos are committed). Port the code, not the docstrings: two upstream docstr
 
 ## Status
 
-Nothing has run against a real FF-680W yet: every **[HW]** item below is open, and **[Device]** code is written
-but checked only with injected inputs (plus Vision OCR of rendered text on macOS).
+First hardware runs on 27 November 2026 (firmware 18.60.SP14P2): `INFO`, `STATUS`, single-sided and duplex scans
+over Wi-Fi (Mac) and USB (M1 iPad Pro, 7.5), and paper-end detection with hardware crop on an A4 print and two
+receipts (1.1). The rest of the **[HW]** checklist is open, no processing step (crop, back OCR, rotation,
+duplicates) has run on a real scan yet, and **[Device]** code is checked only with injected inputs (plus Vision
+OCR of rendered text on macOS).
 
 | Area | Packets | Status |
 |---|---|---|
 | Protocol, Wi-Fi client, CLI (first port) | — | Done |
 | Session safety | 0.1–0.6 | Done: serialised exchanges, `sessionBusy`, graceful stop, FF-680W-only discovery with model check, settings limits and `photoDefaults`, `SideMode`, CLI flags, `RawSpool` |
-| Hardware check, raw corpus | 1.1, 1.2 | Open **[HW]** |
+| Hardware check, raw corpus | 1.1, 1.2 | Started: scans and paper end work; most of the checklist and the corpus open **[HW]** |
 | Crop and ink | 2.1–2.5 | Done (`RGBImage`, `PhotoBox`, `PhotoQuad`, `AutoCrop`, `InkFraction`) |
 | Crop on real scans | 2.6 | Open **[HW]** |
 | Back text, back policy, print assembly | 3.1, 3.3, 3.4 | Done (`BackText`, `BackPolicy`, `PrintAssembler`) |
