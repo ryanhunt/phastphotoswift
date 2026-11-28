@@ -146,17 +146,25 @@ actor SNMPClient: SNMPExchanging {
         }
     }
 
+    /// How long the UDP socket may take to become ready. Separate from the reply timeout: no packet is sent to get
+    /// there, but on a loaded CI simulator it took longer than a 2 s reply timeout. A missing route still fails at
+    /// once (`.waiting`).
+    static let setupTimeout: Duration = .seconds(15)
+
     private func start() async throws {
         guard !started else { return }
         started = true
         let conn = connection
-        let timer = DispatchWorkItem { conn.cancel() }
-        queue.asyncAfter(deadline: .now() + timeout.dispatchInterval, execute: timer)
+        let fired = OnceFlag()
+        let timer = DispatchWorkItem { if fired.claim() { conn.cancel() } }
+        queue.asyncAfter(deadline: .now() + max(timeout, Self.setupTimeout).dispatchInterval, execute: timer)
         defer { timer.cancel() }
         do {
             try await NetworkTransport.start(conn, queue: queue)
-        } catch ScannerError.connectionClosed {
-            throw ScannerError.timedOut
+        } catch {
+            // cancelled by the timer: report a timeout, whichever state the cancel produced
+            if fired.isClaimed { throw ScannerError.timedOut }
+            throw error
         }
         receiveLoop()
     }
