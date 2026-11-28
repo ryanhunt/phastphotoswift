@@ -11,11 +11,12 @@ This is a library, not an app: it has no UI. Apps add it as a Swift package and 
 > **Status: early, first hardware results in.** On a real FF-680W (firmware 18.60, November 2026): single-sided
 > and duplex scans over Wi-Fi from a Mac and over USB from an M1 iPad Pro, each print cut to its paper by the
 > scanner (A4, receipts, 6×4 prints), and a first run of the processing on four 6×4 prints: blank backs skipped, a
-> handwritten word read from a back, upside-down and sideways prints turned. Not yet tried: 600 dpi, large stacks,
+> handwritten word read from a back, upside-down and sideways prints turned; and the scanner's health report over
+> SNMP (firmware, roller kit wear, clock, network details). Not yet tried: 600 dpi, large stacks,
 > an iPhone, USB from a Mac, and duplicate detection or enhancement judged on real scans. Everything is also tested
 > against a simulated scanner, a loopback server and synthetic images. The supported scanner is the **FastFoto
 > FF-680W**, the model the protocol was established on. See [docs/ROADMAP.md](docs/ROADMAP.md) for what is
-> verified.
+> verified and [docs/PLAN.md](docs/PLAN.md) for what comes next.
 
 ## Packages
 
@@ -34,7 +35,7 @@ Requires iOS 16 / macOS 13 or later and Swift 6.
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/ryanhunt/phastphotoswift.git", from: "0.2.0"),
+    .package(url: "https://github.com/ryanhunt/phastphotoswift.git", from: "0.3.0"),
 ],
 targets: [
     .target(name: "MyApp", dependencies: [.product(name: "PhastPhotoScanner", package: "phastphotoswift")]),

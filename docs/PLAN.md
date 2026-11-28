@@ -1,5 +1,9 @@
 # Plan after 0.2.0
 
+> **Progress.** 0.3.0 (29 November 2026) has 11.1–11.3: `SNMP`, `ScannerHealth`, `ScannerHealthReader` and
+> `phastphoto health`, read on a real FF-680W. `status --raw` from 11.3 moved to 12.1. Next: the visit at the
+> scanner (row 4 below).
+
 What is left to build and check, in packets sized for one engineer, in the style of [ROADMAP.md](ROADMAP.md).
 Packet numbers below 10 are ROADMAP's; this plan starts at 10 and does not repeat what ROADMAP already says.
 **[HW]** = needs a real scanner, with its owner present. **[Device]** = needs a real device or private photos.
@@ -291,13 +295,13 @@ that can zero a counter by mistake is a liability; if an app needs "I replaced t
 
 **12.1 Status in full.**
 - Goal: `ScannerStatus` names every condition an FF-680W can report, with friendly text; mid-scan `#err`
-  (`ScannerError.scanFailed`) gets the same decoding.
+  (`ScannerError.scanFailed`) gets the same decoding; CLI `status --raw` prints the `STAT` tokens (from 11.3).
 - Files: `ScannerReports.swift`, `StatusMessages.swift`.
 - References: error words from epsonscan2's `ESCI2Defs.h`: `OPN ` cover open, `PJ  ` jam, `PE  ` empty, `DFED`
   double feed, `ERR ` fatal, `DTCL` tray closed, `PPRT` paper protection, `PSKW` skew; `STAT` tokens `#GLS`
   (`DIRT`), `#WRN` (`CLN `), `#ERC` (error code), `#PB ` (button). SANE's `epsonds` treats `ADF OPN` as cover open.
 - Tests: one case per word, on synthetic `STAT` bodies; unknown words still fall through to "Scanner reports: …".
-- **[HW]**: `status --raw` (11.3) with the cover open, a jam, a double feed. No new command.
+- **[HW]**: `status --raw` with the cover open, a jam, a double feed. No new command.
 
 **12.2 The rest of `INFO`.** Accessors for `#VER`, `#DSZ`, `#IMX`, `#DFM`, `#ADF` area, minimum and maximum
 (1/100 in), feed order (`FORD PF1N` = first sheet first; ROADMAP 1.1 saw the bottom of the stack feed first).
@@ -335,14 +339,14 @@ ROADMAP status rows for phases 10–12, CI unchanged (all new tests run without 
 
 | # | Packet | Priority | Effort | Needs |
 |---|---|---|---|---|
-| 1 | 11.1 SNMP wire format | High | 1 day | — |
-| 2 | 11.2 Health parser | High | 1 day | — |
-| 3 | 11.3 Client, reader, `health`, `status --raw` | High | 1.5 days | [HW] read-only, 30 min |
+| 1 | 11.1 SNMP wire format | High | Done (0.3.0) | — |
+| 2 | 11.2 Health parser | High | Done (0.3.0) | — |
+| 3 | 11.3 Client, reader, `health` | High | Done (0.3.0); `status --raw` moved to 12.1 | [HW] read-only: done |
 | 4 | 10.1 Wi-Fi checklist + 12.1 captures + 11.4 labelling, one session | High | 1 day at the scanner | [HW], owner, Epson Scan 2 Utility |
 | 5 | 12.1 Status in full | High | 0.5 day | captures from 4 |
 | 6 | 10.2, 10.3 Corpus; crop, ink, duplicates | High | 2–3 days | [HW data] |
 | 7 | 10.4, 10.7 Vision on real prints; iPhone run | Medium | 1–2 days | [Device] |
-| 8 | 14.1 Release 0.3.0 | Medium | 0.5 day | 1–5 |
+| 8 | 14.1 Release 0.3.0 | Medium | Done (after 1–3) | — |
 | 9 | 11.5 Maintenance mode (simulator, then USB, then Wi-Fi) | Medium | 2 days + 1 session | [HW], owner; 10.5 or 10.6 first |
 | 10 | 10.5, 10.6 USB from a Mac; iPad rest | Medium | 1 day | [HW] |
 | 11 | 12.2 Rest of `INFO` | Low | 0.5 day | — |
