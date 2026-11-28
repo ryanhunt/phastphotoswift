@@ -1,12 +1,14 @@
 // phastphoto: a developer CLI for checking PhastPhotoScanner against a real scanner.
 //
 //   phastphoto [--host HOST] discover [--all] | info [--show-serial] | capa | status
+//   phastphoto [--host HOST] health [--show-identifiers] [--community NAME]
 //   phastphoto [--host HOST] scan [--dpi N] [--gray] [--quality N] [--deskew] [--double-feed 1|3] [--width IN]
 //                                [--sides picture|both|back|fast] [--watch] [--out DIR] [--process PIPELINE...]
 //   phastphoto process [--sides MODE] [--out DIR] [PIPELINE...] RAW...
 //
 // Without --host the scanner is found with Bonjour (FF-680W only). PHASTPHOTO_HOST sets a default host.
-// The serial number is hidden unless --show-serial is given. `scan --process` saves the untouched scans in
+// The serial number is hidden unless --show-serial is given. `health` reads firmware, roller kit wear and
+// other values over SNMP (Wi-Fi only), hiding the serial, address and MAC unless --show-identifiers. `scan --process` saves the untouched scans in
 // OUT/raw and runs each print through PrintPipeline while the scan goes on; `process` does the same for raw
 // scans saved earlier.
 
@@ -18,6 +20,7 @@ import PhastPhotoScanner
 
 let usage = """
     usage: phastphoto [--host HOST] discover [--all] | info [--show-serial] | capa | status
+           phastphoto [--host HOST] health [--show-identifiers] [--community NAME]
            phastphoto [--host HOST] scan [--dpi N] [--gray] [--quality N] [--deskew] [--double-feed 1|3]
                                          [--width INCHES] [--length INCHES] [--no-hardware-crop]
                                          [--sides picture|both|back|fast] [--watch] [--out DIR]
@@ -166,6 +169,24 @@ func describe(_ page: SpooledPage) -> String {
         for scanner in found {
             print("\(scanner.name)  model=\(scanner.model ?? "?")  available=\(scanner.isAvailable.map(String.init) ?? "?")")
         }
+
+    case "health":
+        let showIdentifiers = flag("--show-identifiers")
+        let community = try option("--community") ?? "public"
+        let target = try await resolve(host: host)
+        let reader = if let host = target.host {
+            ScannerHealthReader(host: host, community: community)
+        } else {
+            ScannerHealthReader(scanner: target.scanner!, community: community)
+        }
+        let health: ScannerHealth
+        do {
+            health = try await reader.read()
+        } catch ScannerError.timedOut {
+            throw UsageError(description: "the scanner didn't answer SNMP: is it awake, and is SNMP on in its Web Config?")
+        }
+        if health.isEmpty { print("the scanner answered SNMP but reported nothing this tool reads") }
+        for (key, value) in health.displayFields(showIdentifiers: showIdentifiers) { print("\(key): \(value)") }
 
     case "info", "capa", "status":
         let showSerial = flag("--show-serial")
