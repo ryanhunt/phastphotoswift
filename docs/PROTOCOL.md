@@ -179,6 +179,25 @@ then the body).
 - Measured at 600 dpi: each side's data arrives in ~0.3 s of transfer, against ~4.5 s over Wi-Fi. A print then
   takes ~6.5 s, the scanner's own speed, for one side or both.
 
+## SNMP (scanner health)
+
+*phastphotoswift, 28 Nov 2026, firmware 18.60.SP14P2; not from ffscan.* The scanner answers SNMP v1 on UDP 161
+with community `public`, beside the "IS" protocol: no lock, no session. Read-only walks found, in Epson's tree
+(`1.3.6.1.4.1.1248`):
+
+- **Firmware** at `…1.2.2.2.1.1.2.1.n` with labels at `…1.2.2.2.1.1.3.1.n` (`Main FW`, `Serial No.`,
+  `Network FW`, `FW Package`); match rows by label.
+- **The roller assembly kit** at `…1.4.2.14.1.1.<column>.1.1`: name in column 3 (spelt "Roller Assemblly Kit"),
+  life in 6 (200000, Epson's published figure), count in 7.
+- **Unlabelled counters** at `…1.4.2.6.1.1.<column>.1.1` (columns 4, 7, 8 equalled the kit count; 5, 6, 10, 11
+  other counts) and **settings** under `…1.2.2.3` (probably the sleep timer at `…3.1.1.9.1`, the power-off timer
+  at `…3.3.1.3.1` with its choices at `…3.6.1.2.1.n`), and the **clock** (`DateAndTime`, UTC) at `…3.1.1.11.1`.
+- Also present and deliberately not read by the library: the last client's host name (`…1.4.2.21`) and the Wi-Fi
+  group (network name, access point address).
+
+There is no Printer MIB, no eSCL or IPP, and Web Config needs an administrator password to be set before it shows
+anything. Whether SNMP answers while the scanner sleeps or scans is not known yet.
+
 ## 4. Not covered yet
 
 - The **Scan button** on the scanner (push-scan events; Epson's model file names `com.epson.EventManager`

@@ -21,8 +21,8 @@ This is a library, not an app: it has no UI. Apps add it as a Swift package and 
 
 | Product | What it does |
 |---|---|
-| `PhastPhotoProtocol` | Wire formats only, no I/O: "IS" packets, ESC/I-2 tokens and commands, `ScanSettings` → `PARA` block, `INFO`/`STAT` parsing, the JPEG height fix. |
-| `PhastPhotoScanner` | The client: discovery (`ScannerDiscovery` over Bonjour, `SubnetProbe` fallback), transports (`NetworkTransport` for Wi-Fi, `USBTransport` on macOS and, through a driver extension the app ships, on M-series iPads; `ScannerConnection.automatic()` to pick one), `ScannerSession` for queries and scans, `RawSpool` to write pages to disk as they arrive, `PrintAssembler` to pair each picture with its back, `ScannerWatch` to scan each stack as it is loaded. |
+| `PhastPhotoProtocol` | Wire formats only, no I/O: "IS" packets, ESC/I-2 tokens and commands, `ScanSettings` → `PARA` block, `INFO`/`STAT` parsing, the JPEG height fix, SNMP v1 messages and `ScannerHealth`. |
+| `PhastPhotoScanner` | The client: discovery (`ScannerDiscovery` over Bonjour, `SubnetProbe` fallback), transports (`NetworkTransport` for Wi-Fi, `USBTransport` on macOS and, through a driver extension the app ships, on M-series iPads; `ScannerConnection.automatic()` to pick one), `ScannerSession` for queries and scans, `RawSpool` to write pages to disk as they arrive, `PrintAssembler` to pair each picture with its back, `ScannerWatch` to scan each stack as it is loaded, `ScannerHealthReader` for firmware and roller wear over SNMP. |
 | `PhastPhotoImaging` | Image processing, no Vision: `AutoCrop` (find, straighten and crop the print), `InkFraction` (blank backs), `BackText` (keep handwriting, drop lab codes; dates), `PenInk` (a lone word written in pen is kept), `Duplicates`/`DuplicateIndex`, enhancement (`removingRedEye`, `restoredFaded`, `autoEnhanced`, `adjusted`, `RGBImage.enhancedCopy`), `PhotoMetadata` and `PhotoOrientation` (lossless), `FastFotoImport`. |
 | `PhastPhotoVision` | Apple Vision: `BackReader` (OCR of print backs), `BackPolicy` (which backs to keep), `AutoRotation` (faces, then scene), `EyeFinder` (for red-eye), `VisionWarmUp`. |
 | `PhastPhotoPipeline` | `PrintPipeline`: runs each print through ffscan's order (back text, crop, blank-back and fast-mode checks, duplicates, enhanced copy, rotation, metadata) and returns the files to save. Vision sits behind `PrintAnalyzer`, so tests and apps can inject results. |
@@ -135,6 +135,27 @@ Things worth knowing (details in [docs/PROTOCOL.md](docs/PROTOCOL.md)):
   (and a stack stops after one print); crop those with `AutoCrop`.
 - **FF-680W only.** Discovery lists only FF-680W scanners by default, and `open()` checks the model in `INFO`.
 
+### Scanner health
+
+`ScannerHealthReader` reads the scanner's own report over SNMP (Wi-Fi only): firmware versions, the roller
+assembly kit's count against its life (200,000 scans on the FF-680W), the scanner's clock, uptime and network
+details. It needs no session and never takes the scanner's lock, so an app can show it while another app holds the
+scanner; read it between scans. It only reads: nothing can change a setting.
+
+```swift
+let health = try await ScannerHealthReader(scanner: scanner).read()      // or ScannerHealthReader(host:)
+print(health.firmware?.package ?? "?")                                     // "18.60.SP14P2.FY17"
+if let kit = health.rollerKit, let left = kit.remainingFraction {
+    print("roller kit: \(kit.used ?? 0) of \(kit.life ?? 0) scans, \(Int(left * 100))% left, due: \(kit.isDue)")
+}
+```
+
+The scanner also reports counters and timer settings whose meaning isn't established yet (lifetime scans, jams,
+double feeds, sleep and power-off timers are candidates): they are in `health.unlabelled`, keyed by OID, until a
+session at the scanner labels them (docs/PLAN.md 11.4). The serial number, IPv4 address and MAC address are
+personal: `displayFields()` redacts them unless asked. SNMP may be off, or its community changed, in the
+scanner's Web Config; the reader then times out.
+
 ### Command-line tool
 
 ```bash
@@ -181,6 +202,12 @@ result is printed (saved files, skipped sides and why, back text, rotation, dupl
 reported, the run carries on, and the exit status is 1. The first Vision call at a new path can take about a
 minute while models load (`VisionWarmUp`). Release builds (`swift run -c release`) process prints many times
 faster than Debug.
+
+`health` prints the scanner's health report (`--show-identifiers` to include the serial, address and MAC):
+
+```bash
+swift run phastphoto health
+```
 
 Pass `--host <address>` (or set `PHASTPHOTO_HOST`) to skip Bonjour. `info` hides the serial number unless you
 pass `--show-serial`; `discover --all` lists every Bonjour scanner, not only FF-680Ws.

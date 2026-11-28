@@ -148,8 +148,11 @@ func page(_ index: Int, _ side: ScannedPage.Side, seed: UInt8 = 0) -> ScannedPag
         let watch = ScannerWatch(settings: ScanSettings(), pollInterval: .milliseconds(3)) {
             SimulatedTransport(scanner: scanner)
         }
-        let loader = Task {  // someone loads photos after a while
-            try await Task.sleep(for: .milliseconds(80))
+        let loader = Task {  // someone loads photos once the watch has polled the empty feeder twice
+            // wait for polls, not for a time: on a loaded CI simulator 80 ms held only two sessions
+            while await scanner.commands.filter({ $0 == "STAT" }).count < 2 {
+                try await Task.sleep(for: .milliseconds(2))
+            }
             await scanner.configure {
                 $0.statusBody = Data()
                 $0.imageReplies = GracefulStopTests.twoPrints()
@@ -175,7 +178,7 @@ func page(_ index: Int, _ side: ScannedPage.Side, seed: UInt8 = 0) -> ScannedPag
         let log = await scanner.commands
         #expect(log.filter { $0 == "STAT" }.count >= 3)  // it polled
         #expect(log.filter { $0 == "INFO" }.count == log.filter { $0 == "FIN " }.count)  // a new session each time
-        #expect(log.filter { $0 == "FIN " }.count >= 4)
+        #expect(log.filter { $0 == "FIN " }.count >= 3)  // two polls, then the scan
         #expect(await scanner.closed)
     }
 
