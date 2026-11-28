@@ -31,6 +31,28 @@ import Testing
         #expect(r.rotation == nil && r.lines.isEmpty)
     }
 
+    @Test func boxesFollowTheWinningLines() {
+        let box = NormalizedBox(x0: 0.1, y0: 0.2, x1: 0.3, y1: 0.4)
+        let r = BackReader.best(of: [[RecognizedLine(text: "kept", confidence: 0.9, box: box),
+                                      RecognizedLine(text: "low", confidence: 0.1, box: nil)]])
+        #expect(r.lines == ["kept"])
+        #expect(r.boxes == [box])
+    }
+
+    /// Vision's box (origin bottom-left, upright) back to the stored image for each orientation it was told.
+    @Test func visionBoxesMapBackToTheStoredImage() {
+        // a box in the upright image's top-left corner: x 0.1-0.3, y 0.1-0.2 from the top
+        let rect = CGRect(x: 0.1, y: 0.8, width: 0.2, height: 0.1)
+        func near(_ a: NormalizedBox, _ b: NormalizedBox) -> Bool {
+            abs(a.x0 - b.x0) < 1e-9 && abs(a.y0 - b.y0) < 1e-9 && abs(a.x1 - b.x1) < 1e-9 && abs(a.y1 - b.y1) < 1e-9
+        }
+        #expect(near(BackReader.storedBox(fromVision: rect, quarterTurns: 0), .init(x0: 0.1, y0: 0.1, x1: 0.3, y1: 0.2)))
+        // stored turned 90 anticlockwise from upright (shown turned clockwise): upright top-left is stored bottom-left
+        #expect(near(BackReader.storedBox(fromVision: rect, quarterTurns: 1), .init(x0: 0.1, y0: 0.7, x1: 0.2, y1: 0.9)))
+        #expect(near(BackReader.storedBox(fromVision: rect, quarterTurns: 2), .init(x0: 0.7, y0: 0.8, x1: 0.9, y1: 0.9)))
+        #expect(near(BackReader.storedBox(fromVision: rect, quarterTurns: 3), .init(x0: 0.8, y0: 0.1, x1: 0.9, y1: 0.3)))
+    }
+
     @Test func tieKeepsFirstOrientation() {
         let c = [RecognizedLine(text: "same", confidence: 0.9)]
         #expect(BackReader.best(of: [c, c, c, c]).rotation == 0)
@@ -236,6 +258,51 @@ import CoreText
         #expect(text.contains("HELLOWORLD"), "read \(reading.lines) for a print turned \(turned)")
         // The winning rotation is deliberately not checked: Vision's text recogniser reads rotated text at any
         // orientation with similar confidence, so the four candidates tie and the first (0) wins, as upstream.
+    }
+
+    /// The text is drawn in the left part of the image (x 40-~700 of 900, middle band); wherever the image is
+    /// turned, the winning line's box must cover where that text is in the stored pixels.
+    @Test(arguments: [0, 90, 180, 270])
+    func lineBoxesPointAtTheTextInStoredPixels(turned: Int) async throws {
+        let upright = Self.renderText("HELLO WORLD")
+        let image = Self.rotated(upright, clockwise: turned)
+        let reading = try await BackReader.read(image)
+        let i = try #require(reading.lines.firstIndex { $0.uppercased().contains("HELLO") }, "read \(reading.lines)")
+        let box = try #require(reading.boxes[i]?.pixels(width: image.width, height: image.height))
+        // a point inside the first letter, in upright pixels, turned the same way as the image
+        let (ux, uy) = (90, 150)
+        let (w, h) = (upright.width, upright.height)
+        let (sx, sy) = switch turned {
+        case 90: (h - 1 - uy, ux)
+        case 180: (w - 1 - ux, h - 1 - uy)
+        case 270: (uy, w - 1 - ux)
+        default: (ux, uy)
+        }
+        #expect((box.x0 ..< box.x1).contains(sx) && (box.y0 ..< box.y1).contains(sy), "box \(box) for \(turned)")
+    }
+
+    /// One word in ballpoint blue on off-white paper is kept; the same word in pale grey is not.
+    @Test func loneWordInPenIsKeptAndPaleIsNot() async throws {
+        func back(_ ink: CGColor) -> RGBImage {
+            let space = CGColorSpaceCreateDeviceRGB()
+            let ctx = CGContext(data: nil, width: 900, height: 300, bitsPerComponent: 8, bytesPerRow: 0, space: space,
+                                bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+            ctx.setFillColor(CGColor(red: 239 / 255, green: 238 / 255, blue: 240 / 255, alpha: 1))
+            ctx.fill(CGRect(x: 0, y: 0, width: 900, height: 300))
+            let font = CTFontCreateWithName("Helvetica" as CFString, 90, nil)
+            let attributed = NSAttributedString(string: "Harbour", attributes: [
+                NSAttributedString.Key(kCTFontAttributeName as String): font,
+                NSAttributedString.Key(kCTForegroundColorAttributeName as String): ink,
+            ])
+            ctx.textPosition = CGPoint(x: 40, y: 110)
+            CTLineDraw(CTLineCreateWithAttributedString(attributed), ctx)
+            return RGBImage(cgImage: ctx.makeImage()!)
+        }
+        let pen = back(CGColor(red: 60 / 255, green: 90 / 255, blue: 190 / 255, alpha: 1))
+        #expect(try await BackReader.humanText(of: pen) == "Harbour")
+        // pale grey (about 70 from the paper): read or not, it is not pen, and a lone word is dropped
+        let pale = back(CGColor(red: 215 / 255, green: 214 / 255, blue: 218 / 255, alpha: 1))
+        #expect(try await BackReader.humanText(of: pale) == "")
     }
 }
 #endif

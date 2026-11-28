@@ -91,6 +91,14 @@ final class FakeAnalyzer: PrintAnalyzer, @unchecked Sendable {
     }
 }
 
+/// An analyzer whose own human-text step keeps a lone word, as ``VisionAnalyzer`` does for one written in pen.
+struct LoneWordAnalyzer: PrintAnalyzer {
+    func readBack(_ back: RGBImage) async throws -> String { "Mum" }
+    func humanBackText(_ back: RGBImage) async throws -> String { "Mum" }
+    func rotation(of picture: RGBImage) async -> RotationDecision { .init(degrees: 0, decided: false) }
+    func eyes(in picture: RGBImage) async throws -> [EyePosition] { [] }
+}
+
 @Suite struct PrintPipelineTests {
     /// The scans themselves are what the back rules assume: check their cropped ink first.
     @Test func syntheticBacksHaveTheIntendedInk() throws {
@@ -182,6 +190,19 @@ final class FakeAnalyzer: PrintAnalyzer, @unchecked Sendable {
             .process(index: 0, mode: .both, picture: Scans.picture(), back: Scans.backWithStamp())
         #expect(result.back?.saved != nil)
         #expect(result.backText == "")
+    }
+
+    /// The pipeline asks the analyzer for the human text: by default a lone word is filtered out and the
+    /// faint back dropped; an analyzer that keeps it (pen ink) keeps the back too.
+    @Test func analyzerDecidesTheHumanText() async throws {
+        let filtered = try await PrintPipeline(analyzer: FakeAnalyzer(backText: "Mum"))
+            .process(index: 0, mode: .both, picture: Scans.picture(), back: Scans.backWithOneLine())
+        #expect(filtered.backText == "")
+        #expect(filtered.back?.saved == nil)
+        let kept = try await PrintPipeline(analyzer: LoneWordAnalyzer())
+            .process(index: 0, mode: .both, picture: Scans.picture(), back: Scans.backWithOneLine())
+        #expect(kept.backText == "Mum")
+        #expect(kept.back?.saved != nil)
     }
 
     /// A back that couldn't be read is kept (it may have writing) and the failure is reported.
