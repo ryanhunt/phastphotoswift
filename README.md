@@ -8,10 +8,14 @@ out the scanner's network protocol.
 
 This is a library, not an app: it has no UI. Apps add it as a Swift package and build their own interface on top.
 
-> **Status: early.** Everything is tested against a simulated scanner, a loopback server and synthetic images,
-> but has **not yet been run against a real scanner**, and the Vision features have not been checked on real
-> photos. The supported scanner is the **FastFoto FF-680W**, the model the protocol was established on. See
-> [docs/ROADMAP.md](docs/ROADMAP.md) for what is verified.
+> **Status: early, first hardware results in.** On a real FF-680W (firmware 18.60, November 2026): single-sided
+> and duplex scans over Wi-Fi from a Mac and over USB from an M1 iPad Pro, each print cut to its paper by the
+> scanner (A4, receipts, 6×4 prints), and a first run of the processing on four 6×4 prints: blank backs skipped, a
+> handwritten word read from a back, upside-down and sideways prints turned. Not yet tried: 600 dpi, large stacks,
+> an iPhone, USB from a Mac, and duplicate detection or enhancement judged on real scans. Everything is also tested
+> against a simulated scanner, a loopback server and synthetic images. The supported scanner is the **FastFoto
+> FF-680W**, the model the protocol was established on. See [docs/ROADMAP.md](docs/ROADMAP.md) for what is
+> verified.
 
 ## Packages
 
@@ -30,7 +34,7 @@ Requires iOS 16 / macOS 13 or later and Swift 6.
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/ryanhunt/phastphotoswift.git", branch: "main"),
+    .package(url: "https://github.com/ryanhunt/phastphotoswift.git", from: "0.2.0"),
 ],
 targets: [
     .target(name: "MyApp", dependencies: [.product(name: "PhastPhotoScanner", package: "phastphotoswift")]),
@@ -46,7 +50,7 @@ targets: [
 - **USB on iPadOS** (M-series iPads only; not iPhone): the app ships the driver extension in
   [Drivers/PhastPhotoUSBDriver](Drivers/PhastPhotoUSBDriver/README.md), with the
   `com.apple.developer.driverkit.communicates-with-drivers` entitlement, and the user turns the driver on in
-  Settings > General > Drivers. It compiles but has not yet run on an iPad.
+  Settings > General > Drivers. Checked on an iPad Pro (M1): scans at about five times the Wi-Fi speed.
 
 ## Usage
 
@@ -101,7 +105,7 @@ import PhastPhotoImaging
 import PhastPhotoVision
 
 let raw = try Data(contentsOf: url)
-let cropped = try AutoCrop.cropJPEG(raw)                              // straightened, backing removed
+let cropped = try AutoCrop.cropJPEG(raw)          // a scan with backing (no hardware crop): straightened, cropped
 let picture = try RGBImage.decode(cropped.jpeg)
 let rotation = await AutoRotation.rotation(of: picture)               // faces, then scene; .decided
 let eyes = try await EyeFinder.findEyes(in: picture).map(\.position)
@@ -125,7 +129,10 @@ Things worth knowing (details in [docs/PROTOCOL.md](docs/PROTOCOL.md)):
   released keeps the scanner locked until it is switched off and on.
 - **Sides.** Duplex scans send side A (facing down) then side B (facing up) for each print. A single-sided scan
   reads only side A, so load prints face down to get only the pictures, with about half the data.
-- **Pages are raw.** Each JPEG still includes the grey backing around the print; crop it with `AutoCrop`.
+- **Pages are cut to the paper.** With hardware crop (`ScanSettings.hardwareCrop`, on by default) the scanner
+  stops at the end of each print and trims each side to it; such pages have `hardwareCropped` set, and
+  `PrintPipeline` does not crop them again. Without it, firmware 18.60 returns 36 in pages with the grey backing
+  (and a stack stops after one print); crop those with `AutoCrop`.
 - **FF-680W only.** Discovery lists only FF-680W scanners by default, and `open()` checks the model in `INFO`.
 
 ### Command-line tool
@@ -219,6 +226,7 @@ swift build && swift test
 xcodebuild -scheme PhastPhoto-Package -destination 'generic/platform=iOS Simulator' build
 ```
 
+CI runs the macOS tests, the tests on an iPhone simulator, an iOS device build and the DriverKit driver build.
 The tests need no scanner: `SimulatedScanner` plays back the FF-680W's replies, a loopback "IS" server
 exercises the Wi-Fi transport and subnet probe, and fake pipes exercise USB framing. Imaging tests use synthetic
 images built in code (ffscan's own test scans, ported). Protocol fixtures are real scanner replies from ffscan
