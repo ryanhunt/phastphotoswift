@@ -115,10 +115,14 @@ actor SNMPClient: SNMPExchanging {
 
     func exchange(_ kind: SNMPPDU.Kind, oids: [SNMPOID]) async throws -> SNMPPDU {
         try await start()
+        let id = nextID
+        nextID = nextID == Int32.max ? 1 : nextID + 1
+        let datagram = SNMP.request(kind, requestID: id, community: community, oids: oids)
         do {
-            return try await attempt(kind, oids: oids)
+            return try await attempt(id, datagram)
         } catch ScannerError.timedOut {
-            return try await attempt(kind, oids: oids)  // UDP: one retry
+            // UDP: send the same request again. Same ID, so a late answer to the first send also counts.
+            return try await attempt(id, datagram)
         }
     }
 
@@ -128,10 +132,7 @@ actor SNMPClient: SNMPExchanging {
         waiters = [:]
     }
 
-    private func attempt(_ kind: SNMPPDU.Kind, oids: [SNMPOID]) async throws -> SNMPPDU {
-        let id = nextID
-        nextID = nextID == Int32.max ? 1 : nextID + 1
-        let datagram = SNMP.request(kind, requestID: id, community: community, oids: oids)
+    private func attempt(_ id: Int32, _ datagram: Data) async throws -> SNMPPDU {
         let timer = Task { [timeout] in
             try await Task.sleep(for: timeout)
             self.expire(id)

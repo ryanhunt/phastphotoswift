@@ -79,11 +79,25 @@ private actor EndlessAgent: SNMPExchanging {
         let agent = try UDPAgent(table: SampleWalk.bindings, dropFirst: 1)
         let port = try await agent.start()
         defer { agent.stop() }
-        let client = SNMPClient(host: "127.0.0.1", port: port, community: "public", timeout: .milliseconds(300))
+        // the retry's answer must arrive within the timeout: generous, since a passing run doesn't wait for it
+        let client = SNMPClient(host: "127.0.0.1", port: port, community: "public", timeout: .seconds(1))
         let pdu = try await client.exchange(.getNextRequest, oids: [EpsonMIB.counterTable])
         await client.close()
         #expect(pdu.bindings.first?.value == .counter32(1331))
         #expect(agent.received == 2)
+    }
+
+    /// The answer to the first send arrives after its timeout: the retry (same request ID) takes it.
+    @Test func aLateAnswerCountsForTheRetry() async throws {
+        // the agent answers the first send only when the retry arrives, and never answers the retry itself:
+        // the client must accept the first send's answer (no timing involved)
+        let agent = try UDPAgent(table: SampleWalk.bindings, answerFirstOnRetry: true)
+        let port = try await agent.start()
+        defer { agent.stop() }
+        let client = SNMPClient(host: "127.0.0.1", port: port, community: "public", timeout: .milliseconds(500))
+        let pdu = try await client.exchange(.getNextRequest, oids: [EpsonMIB.counterTable])
+        await client.close()
+        #expect(pdu.bindings.first?.value == .counter32(1331))
     }
 
     /// Silence, and replies with another request ID or community, all end as a timeout.
@@ -111,11 +125,14 @@ final class UDPAgent: @unchecked Sendable {
     private let table: [SNMPBinding]
     private let mode: Mode
     private var dropFirst: Int
+    private let answerFirstOnRetry: Bool
+    private var heldReply: Data?
     private let lock = NSLock()
     private var _received = 0
     var received: Int { lock.withLock { _received } }
 
-    init(table: [SNMPBinding], mode: Mode = .normal, dropFirst: Int = 0) throws {
+    init(table: [SNMPBinding], mode: Mode = .normal, dropFirst: Int = 0, answerFirstOnRetry: Bool = false) throws {
+        self.answerFirstOnRetry = answerFirstOnRetry
         self.table = table.sorted { $0.oid < $1.oid }
         self.mode = mode
         self.dropFirst = dropFirst
@@ -158,9 +175,21 @@ final class UDPAgent: @unchecked Sendable {
             return false
         }
         guard !drop, mode != .silent, let request = try? decodeRequest(data) else { return nil }
+        if answerFirstOnRetry {
+            // hold the first answer; send it (instead of an answer) when the retry comes in
+            return lock.withLock {
+                if heldReply == nil, _received == 1 { heldReply = reply(to: request); return nil }
+                defer { heldReply = nil }
+                return heldReply
+            }
+        }
+        return reply(to: request)
+    }
+
+    private func reply(to request: (kind: UInt8, id: Int32, oids: [SNMPOID])) -> Data {
         let oid = request.oids[0]
         let hit = request.kind == 0xA1 ? table.first { oid < $0.oid } : table.first { $0.oid == oid }
-        let id = mode == .wrongID ? request.id &+ 1 : request.id
+        let id = mode == .wrongID ? request.id ^ 0x5555 : request.id  // never an ID the client used
         let community = mode == .wrongCommunity ? "private" : "public"
         guard let hit else {
             return snmpResponse(id: id, errorStatus: SNMPPDU.noSuchName, community: community, [(oid, SNMP.tlv(0x05, []))])
